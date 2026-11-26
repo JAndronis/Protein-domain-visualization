@@ -1,23 +1,46 @@
 """The feature table: one row dict per feature, shared by every parser, the CSV and the renderer."""
+
 import csv
 import io
 from pathlib import Path
 
 
 MOD_ABBR = {
-    "Phosphoserine": "pS", "Phosphothreonine": "pT", "Phosphotyrosine": "pY",
-    "Phosphohistidine": "pH", "N6-acetyllysine": "acK", "N6-methyllysine": "meK",
-    "N6,N6-dimethyllysine": "me2K", "N6,N6,N6-trimethyllysine": "me3K",
-    "Omega-N-methylarginine": "meR", "Asymmetric dimethylarginine": "me2aR",
-    "Symmetric dimethylarginine": "me2sR", "N-acetylmethionine": "acM",
-    "N-acetylserine": "acS", "N-acetylalanine": "acA", "Citrulline": "Cit",
-    "Pyrrolidone carboxylic acid": "pE", "Hydroxyproline": "Hyp",
-    "4-hydroxyproline": "Hyp", "Sulfotyrosine": "sY",
+    "Phosphoserine": "pS",
+    "Phosphothreonine": "pT",
+    "Phosphotyrosine": "pY",
+    "Phosphohistidine": "pH",
+    "N6-acetyllysine": "acK",
+    "N6-methyllysine": "meK",
+    "N6,N6-dimethyllysine": "me2K",
+    "N6,N6,N6-trimethyllysine": "me3K",
+    "Omega-N-methylarginine": "meR",
+    "Asymmetric dimethylarginine": "me2aR",
+    "Symmetric dimethylarginine": "me2sR",
+    "N-acetylmethionine": "acM",
+    "N-acetylserine": "acS",
+    "N-acetylalanine": "acA",
+    "Citrulline": "Cit",
+    "Pyrrolidone carboxylic acid": "pE",
+    "Hydroxyproline": "Hyp",
+    "4-hydroxyproline": "Hyp",
+    "Sulfotyrosine": "sY",
 }
 
 
-COLUMNS = ["protein", "source", "accession", "type", "start", "end",
-           "label", "shape", "show", "color", "group"]
+COLUMNS = [
+    "protein",
+    "source",
+    "accession",
+    "type",
+    "start",
+    "end",
+    "label",
+    "shape",
+    "show",
+    "color",
+    "group",
+]
 
 
 def row(**kw):
@@ -31,8 +54,13 @@ def site_label(ftype, desc, s, e, residue=""):
     if ftype == "Modified residue":
         return f"{MOD_ABBR.get(first, first.split()[0] if first else 'mod')}{s}"
     if ftype == "Glycosylation":
-        return ("N-gly" if first.startswith("N-") else
-                "O-gly" if first.startswith("O-") else "gly") + str(s)
+        return (
+            "N-gly"
+            if first.startswith("N-")
+            else "O-gly"
+            if first.startswith("O-")
+            else "gly"
+        ) + str(s)
     if ftype == "Cross-link":
         for k, v in (("ubiquitin", "Ub"), ("SUMO", "SUMO"), ("NEDD8", "N8")):
             if k in desc:

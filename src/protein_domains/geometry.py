@@ -1,4 +1,5 @@
 """Interval packing, label spreading and the collision tests used by the overlap check."""
+
 import math
 
 
@@ -34,9 +35,9 @@ def spread(xs, d, lo=None, hi=None):
         c = s / n
         out += [c - (n - 1) * d / 2 + k * d for k in range(n)]
     if lo is not None and hi is not None and (len(out) - 1) * d <= hi - lo:
-        for i in range(len(out)):                       # push right of lo
+        for i in range(len(out)):  # push right of lo
             out[i] = max(out[i], lo + i * d if i == 0 else out[i - 1] + d, lo)
-        for i in range(len(out) - 1, -1, -1):           # push left of hi
+        for i in range(len(out) - 1, -1, -1):  # push left of hi
             lim = hi if i == len(out) - 1 else out[i + 1] - d
             out[i] = min(out[i], lim)
     return out
@@ -59,12 +60,17 @@ def poly_hit(P, Q, tol=0.2):
             a = [px * nx + py * ny for px, py in P]
             b = [px * nx + py * ny for px, py in Q]
             if max(a) - tol <= min(b) or max(b) - tol <= min(a):
-                return False          # found a separating axis
+                return False  # found a separating axis
     return True
 
 
 def rect_hit(a, b, tol=0.0):
-    return a[0] < b[2] - tol and b[0] < a[2] - tol and a[1] < b[3] - tol and b[1] < a[3] - tol
+    return (
+        a[0] < b[2] - tol
+        and b[0] < a[2] - tol
+        and a[1] < b[3] - tol
+        and b[1] < a[3] - tol
+    )
 
 
 def seg_hits_rect(p, q, r, tol=0.3):
@@ -74,7 +80,12 @@ def seg_hits_rect(p, q, r, tol=0.3):
         return False
     dx, dy = q[0] - p[0], q[1] - p[1]
     t0, t1 = 0.0, 1.0
-    for pp, qq in ((-dx, p[0] - x0), (dx, x1 - p[0]), (-dy, p[1] - y0), (dy, y1 - p[1])):
+    for pp, qq in (
+        (-dx, p[0] - x0),
+        (dx, x1 - p[0]),
+        (-dy, p[1] - y0),
+        (dy, y1 - p[1]),
+    ):
         if pp == 0:
             if qq < 0:
                 return False

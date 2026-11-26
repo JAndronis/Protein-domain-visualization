@@ -1,4 +1,5 @@
 """Detect each input's format and turn it into feature rows."""
+
 import json
 import re
 import sys
@@ -17,8 +18,11 @@ def load_inputs(inputs, names):
             rows += read_csv(p)
         elif p.suffix.lower() == ".json":
             j = json.loads(p.read_text(encoding="utf-8"))
-            if isinstance(j.get("results"), list) and j["results"] \
-                    and "matches" in j["results"][0]:
+            if (
+                isinstance(j.get("results"), list)
+                and j["results"]
+                and "matches" in j["results"][0]
+            ):
                 rows += parse_iprscan(j)
             elif "primaryAccession" in j:
                 rows += parse_uniprot(j)

@@ -41,6 +41,7 @@ LAYOUT
 
 Standard library only; the optional "metrics" extra (matplotlib) gives exact text widths.
 """
+
 import argparse
 import sys
 from pathlib import Path
@@ -51,35 +52,97 @@ from .render import render
 
 
 def main():
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("inputs", nargs="+", help="UniProt accession(s), UniProt/InterProScan JSON, or CSV")
-    ap.add_argument("-o", "--out", default="domains.svg", help="output SVG (default domains.svg)")
-    ap.add_argument("--name", action="append", help="display name per protein, in order (repeatable)")
-    ap.add_argument("--width", type=float, default=400, help="width of the longest protein, pt (default 400)")
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument(
+        "inputs",
+        nargs="+",
+        help="UniProt accession(s), UniProt/InterProScan JSON, or CSV",
+    )
+    ap.add_argument(
+        "-o", "--out", default="domains.svg", help="output SVG (default domains.svg)"
+    )
+    ap.add_argument(
+        "--name",
+        action="append",
+        help="display name per protein, in order (repeatable)",
+    )
+    ap.add_argument(
+        "--width",
+        type=float,
+        default=400,
+        help="width of the longest protein, pt (default 400)",
+    )
     ap.add_argument("--font", default="Arial", help="font family (default Arial)")
-    ap.add_argument("--font-size", type=float, default=8,
-                    help="base font size in pt (default 8); all spacing scales with it")
-    ap.add_argument("--numbers", action="store_true", help="print start/end residue under each domain")
-    ap.add_argument("--label-angle", type=float, default=-90,
-                    help="site label rotation, -90 (vertical) to -20 (default -90)")
-    sz = ap.add_argument_group("text sizes in pt (each defaults to a fraction of --font-size)")
-    sz.add_argument("--name-size", type=float, help="protein names (default font-size + 1)")
-    sz.add_argument("--domain-size", type=float, help="labels inside domain boxes (default font-size)")
-    sz.add_argument("--outside-size", type=float,
-                    help="domain labels moved below their box (default 0.875 x domain size)")
-    sz.add_argument("--site-size", type=float, help="lollipop / site labels (default 0.875 x font-size)")
-    sz.add_argument("--region-size", type=float, help="labels under region bars (default 0.875 x font-size)")
-    sz.add_argument("--number-size", type=float,
-                    help="domain boundary numbers and protein length (default 0.75 x font-size)")
-    sz.add_argument("--axis-size", type=float, help="ruler numbers (default 0.875 x font-size)")
-    sz.add_argument("--legend-size", type=float, help="legend text (default 0.875 x font-size)")
-    ap.add_argument("--axis", choices=["full", "labels", "none"], default="full",
-                    help="residue ruler at the bottom: full (line, ticks, numbers), "
-                         "labels (numbers only) or none (default full)")
-    ap.add_argument("--min-label-scale", type=float, default=0.7,
-                    help="domain labels may shrink to this fraction of the font size to fit "
-                         "inside their box before moving outside (1 = never shrink; default 0.7)")
+    ap.add_argument(
+        "--font-size",
+        type=float,
+        default=8,
+        help="base font size in pt (default 8); all spacing scales with it",
+    )
+    ap.add_argument(
+        "--numbers",
+        action="store_true",
+        help="print start/end residue under each domain",
+    )
+    ap.add_argument(
+        "--label-angle",
+        type=float,
+        default=-90,
+        help="site label rotation, -90 (vertical) to -20 (default -90)",
+    )
+    sz = ap.add_argument_group(
+        "text sizes in pt (each defaults to a fraction of --font-size)"
+    )
+    sz.add_argument(
+        "--name-size", type=float, help="protein names (default font-size + 1)"
+    )
+    sz.add_argument(
+        "--domain-size",
+        type=float,
+        help="labels inside domain boxes (default font-size)",
+    )
+    sz.add_argument(
+        "--outside-size",
+        type=float,
+        help="domain labels moved below their box (default 0.875 x domain size)",
+    )
+    sz.add_argument(
+        "--site-size",
+        type=float,
+        help="lollipop / site labels (default 0.875 x font-size)",
+    )
+    sz.add_argument(
+        "--region-size",
+        type=float,
+        help="labels under region bars (default 0.875 x font-size)",
+    )
+    sz.add_argument(
+        "--number-size",
+        type=float,
+        help="domain boundary numbers and protein length (default 0.75 x font-size)",
+    )
+    sz.add_argument(
+        "--axis-size", type=float, help="ruler numbers (default 0.875 x font-size)"
+    )
+    sz.add_argument(
+        "--legend-size", type=float, help="legend text (default 0.875 x font-size)"
+    )
+    ap.add_argument(
+        "--axis",
+        choices=["full", "labels", "none"],
+        default="full",
+        help="residue ruler at the bottom: full (line, ticks, numbers), "
+        "labels (numbers only) or none (default full)",
+    )
+    ap.add_argument(
+        "--min-label-scale",
+        type=float,
+        default=0.7,
+        help="domain labels may shrink to this fraction of the font size to fit "
+        "inside their box before moving outside (1 = never shrink; default 0.7)",
+    )
     a = ap.parse_args()
 
     rows = load_inputs(a.inputs, a.name)
@@ -87,13 +150,32 @@ def main():
     if not all(Path(i).suffix.lower() == ".csv" for i in a.inputs):
         csv_out = out.with_name(out.stem + "_features.csv")
         if csv_out.exists():
-            print(f"note: {csv_out} exists, not overwriting (delete it to regenerate)", file=sys.stderr)
+            print(
+                f"note: {csv_out} exists, not overwriting (delete it to regenerate)",
+                file=sys.stderr,
+            )
         else:
             write_csv(rows, csv_out)
             print(f"wrote {csv_out}", file=sys.stderr)
-    render(rows, out, width=a.width, fs=a.font_size, font=a.font,
-           numbers=a.numbers, label_angle=a.label_angle, min_label_scale=a.min_label_scale, axis=a.axis,
-           sizes=dict(name=a.name_size, domain=a.domain_size, outside=a.outside_size,
-                      site=a.site_size, region=a.region_size, number=a.number_size,
-                      axis=a.axis_size, legend=a.legend_size))
+    render(
+        rows,
+        out,
+        width=a.width,
+        fs=a.font_size,
+        font=a.font,
+        numbers=a.numbers,
+        label_angle=a.label_angle,
+        min_label_scale=a.min_label_scale,
+        axis=a.axis,
+        sizes=dict(
+            name=a.name_size,
+            domain=a.domain_size,
+            outside=a.outside_size,
+            site=a.site_size,
+            region=a.region_size,
+            number=a.number_size,
+            axis=a.axis_size,
+            legend=a.legend_size,
+        ),
+    )
     print(f"wrote {out}", file=sys.stderr)

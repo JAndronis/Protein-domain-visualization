@@ -1,4 +1,5 @@
 """Text widths and heights in pt."""
+
 from pathlib import Path
 
 
@@ -10,9 +11,12 @@ class Metrics:
     Vertical metrics are Arial's (ascender 0.75 em incl. accents-free caps/ascenders,
     descender 0.22 em).
     """
+
     ASC, DESC = 0.75, 0.22
-    SUBST = {"arial": ["Liberation Sans", "Arimo", "Helvetica", "Nimbus Sans"],
-             "helvetica": ["Arial", "Liberation Sans", "Arimo", "Nimbus Sans"]}
+    SUBST = {
+        "arial": ["Liberation Sans", "Arimo", "Helvetica", "Nimbus Sans"],
+        "helvetica": ["Arial", "Liberation Sans", "Arimo", "Nimbus Sans"],
+    }
 
     def __init__(self, font):
         self.source = "estimate"
@@ -21,11 +25,14 @@ class Metrics:
             from matplotlib.font_manager import FontProperties, findfont
             from matplotlib.textpath import TextToPath
             import logging
+
             logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
             path = None
             for fam in [font] + self.SUBST.get(font.lower(), []):
                 try:
-                    path = findfont(FontProperties(family=fam), fallback_to_default=False)
+                    path = findfont(
+                        FontProperties(family=fam), fallback_to_default=False
+                    )
                     break
                 except ValueError:
                     continue
@@ -43,8 +50,11 @@ class Metrics:
             if self.source != "estimate":
                 fp = self._fp.copy()
                 fp.set_size(100)
-                w1 = self._t2p.get_text_width_height_descent(s, fp, ismath=False)[0] / 100
-            else:   # generous Arial-like estimate
+                w1 = (
+                    self._t2p.get_text_width_height_descent(s, fp, ismath=False)[0]
+                    / 100
+                )
+            else:  # generous Arial-like estimate
                 narrow = sum(ch in "iljtfrI.,:;'|!()[] " for ch in s)
                 wide = sum(ch in "mwMW@" for ch in s)
                 w1 = 1.08 * (0.56 * len(s) - 0.27 * narrow + 0.3 * wide)
