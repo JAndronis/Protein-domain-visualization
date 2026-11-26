@@ -10,13 +10,11 @@ build/
 dist/
 *.egg-info/
 
-# Hidden files and directories: .venv, .ruff_cache, .vscode, .claude, .DS_Store,
+# Extra files and dirs: .venv, .ruff_cache, .vscode, .claude, .DS_Store,
 # ._* (macOS), .Trash-*, .directory, .nfs*, .fuse_hidden* (Linux)
 .*
 !.gitignore
 !.python-version
-
-# Editor backups and non-hidden OS files
 *~
 *.swp
 Icon?
