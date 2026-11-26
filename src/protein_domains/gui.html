@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>protein-domains</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f3f3f0;
+  --panel: #ffffff;
+  --line: #e2e2dc;
+  --line-strong: #c9c9c1;
+  --text: #1d1d1a;
+  --muted: #6a6a63;
+  --faint: #9b9b93;
+  --accent: #2456d6;
+  --accent-soft: #e9eefc;
+  --warn: #8a4b00;
+  --warn-soft: #fff3df;
+  --err: #a8231a;
+  --err-soft: #fdeceb;
+  --ok: #2f6b3a;
+  --radius: 8px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  font: 13px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+button, input, select { font: inherit; color: inherit; }
+code { font-family: var(--mono); font-size: 11.5px; }
+.muted { color: var(--muted); }
+.grow { flex: 1; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 30px; padding: 0 12px;
+  border: 1px solid var(--line-strong); border-radius: 6px;
+  background: var(--panel); cursor: pointer; white-space: nowrap;
+}
+.btn:hover:not(:disabled) { border-color: var(--muted); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.primary:hover { background: #1c47b8; }
+.btn.small { height: 24px; padding: 0 8px; font-size: 12px; }
+.btn:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 1px;
+}
+
+.topbar {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 10px 16px;
+  background: var(--panel); border-bottom: 1px solid var(--line);
+}
+.brand { font-size: 14px; letter-spacing: -.01em; margin-right: 4px; }
+#source { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 40ch; }
+
+main { padding: 14px 16px 32px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); }
+
+.controls { padding: 14px 16px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.group h2 {
+  margin: 0 0 8px; font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--muted);
+}
+.group h2 .hint, .group h2 code { text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--faint); margin-left: 6px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px 14px; }
+.grid.sizes { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+.field { display: grid; gap: 3px; align-content: start; }
+.field .lab { font-weight: 500; }
+.field .flag { color: var(--faint); font-size: 10.5px; }
+.field input:not([type=checkbox]):not([type=range]):not([type=color]), .field select {
+  width: 100%; height: 28px; padding: 0 8px;
+  border: 1px solid var(--line-strong); border-radius: 5px; background: #fff;
+}
+.field input.invalid { border-color: var(--err); background: var(--err-soft); }
+.checkline { display: flex; align-items: center; gap: 8px; height: 28px; color: var(--muted); }
+.checkline input { margin: 0; accent-color: var(--accent); }
+.range { display: flex; align-items: center; gap: 8px; height: 28px; }
+.range input { flex: 1; min-width: 0; accent-color: var(--accent); }
+.range output { font-variant-numeric: tabular-nums; width: 3.2ch; text-align: right; color: var(--muted); }
+
+details.features > summary {
+  cursor: pointer; font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--muted); padding: 2px 0;
+}
+details.features > summary span { text-transform: none; letter-spacing: 0; font-weight: 400; margin-left: 6px; }
+.table-tools { display: flex; gap: 14px; align-items: center; margin: 10px 0 8px; }
+.table-tools input[type=search] { width: 220px; height: 28px; padding: 0 8px; border: 1px solid var(--line-strong); border-radius: 5px; }
+.table-wrap { max-height: 340px; overflow: auto; border: 1px solid var(--line); border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; font-size: 12px; }
+th {
+  position: sticky; top: 0; background: #fafaf8; z-index: 1;
+  text-align: left; font-weight: 600; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--line);
+}
+td { padding: 3px 8px; border-bottom: 1px solid #f0f0ec; vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+tbody tr { cursor: default; }
+tbody tr:hover td { background: #fafaf7; }
+tbody tr.selected td { background: var(--accent-soft); }
+tbody tr.off td:not(:first-child) { color: var(--faint); }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+td input:not([type=checkbox]), td select { height: 24px; border: 1px solid transparent; border-radius: 4px; background: transparent; padding: 0 5px; }
+td input:not([type=checkbox]):hover, td select:hover { border-color: var(--line-strong); background: #fff; }
+td input[data-c=label] { width: 100%; min-width: 180px; }
+table:not(.multi) .prot { display: none; }
+.grp { color: var(--faint); cursor: help; }
+.colour-cell { display: flex; align-items: center; gap: 4px; }
+input[type=color] { width: 26px; height: 22px; padding: 0; border: 1px solid var(--line-strong); border-radius: 4px; background: none; cursor: pointer; }
+input[type=color]::-webkit-color-swatch-wrapper { padding: 2px; }
+input[type=color]::-webkit-color-swatch { border: 0; border-radius: 2px; }
+.auto-btn { border: 0; background: none; padding: 0 2px; font-size: 11px; color: var(--accent); cursor: pointer; }
+.auto .auto-btn { color: var(--faint); cursor: default; }
+.auto input[type=color] { border-style: dashed; }
+
+.cmd { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--line); }
+.cmd code { flex: 1; min-width: 0; padding: 5px 8px; background: #f6f6f3; border-radius: 5px; overflow-x: auto; white-space: nowrap; }
+
+.stage { overflow: hidden; }
+.stage-bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 8px 12px; border-bottom: 1px solid var(--line); background: #fbfbf9;
+}
+.chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; font-size: 12px; background: #efefeb; color: var(--muted); }
+.chip.ok { color: var(--ok); background: #eaf4ec; }
+.chip.warn { color: var(--warn); background: var(--warn-soft); }
+.chip.err { color: var(--err); background: var(--err-soft); }
+button.chip { border: 0; cursor: pointer; }
+.zoom { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+.zoom select { height: 26px; border: 1px solid var(--line-strong); border-radius: 5px; background: #fff; }
+.issues { margin: 0; padding: 8px 12px 8px 30px; background: var(--warn-soft); color: var(--warn); font-size: 12px; max-height: 140px; overflow: auto; border-bottom: 1px solid var(--line); }
+
+.preview { padding: 24px; overflow: auto; min-height: 340px; background: #fff; }
+.preview svg { display: block; margin: 0 auto; }
+.preview [data-row] { cursor: pointer; }
+.preview [data-row]:hover { opacity: .72; }
+#gui-selection rect {
+  fill: none; stroke: var(--accent); stroke-width: 1.5px; stroke-dasharray: 4 3;
+  vector-effect: non-scaling-stroke; pointer-events: none;
+}
+.preview.empty { display: grid; place-items: center; }
+.drop-hint {
+  display: grid; gap: 8px; justify-items: center; text-align: center;
+  padding: 40px 48px; border: 1.5px dashed var(--line-strong); border-radius: 12px; color: var(--muted);
+}
+.drop-hint strong { color: var(--text); font-size: 15px; font-weight: 600; }
+body.dragging .preview { outline: 2px dashed var(--accent); outline-offset: -8px; background: var(--accent-soft); }
+
+.pop {
+  position: absolute; z-index: 10; width: 290px;
+  background: var(--panel); border: 1px solid var(--line-strong); border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(20, 20, 15, .16), 0 2px 6px rgba(20, 20, 15, .08);
+  padding: 12px; display: grid; gap: 10px;
+}
+.pop-head { display: flex; align-items: start; gap: 8px; }
+.pop-head > div { flex: 1; min-width: 0; }
+.pop-title { font-weight: 600; }
+.pop-sub { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.pop-close { border: 0; background: none; font-size: 18px; line-height: 1; color: var(--muted); cursor: pointer; padding: 0 2px; }
+.pop .field input:not([type=color]) { height: 30px; }
+.colour-row { display: flex; align-items: center; gap: 8px; }
+.colour-row input[type=color] { width: 34px; height: 28px; }
+.colour-row input[type=text] { width: 92px; height: 28px; padding: 0 8px; border: 1px solid var(--line-strong); border-radius: 5px; font-family: var(--mono); font-size: 12px; }
+.colour-row input.invalid { border-color: var(--err); }
+.colour-row .btn { height: 28px; }
+.colour-row.auto .btn { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.swatches { display: flex; flex-wrap: wrap; gap: 5px; }
+.swatch { width: 20px; height: 20px; border-radius: 4px; border: 1px solid rgba(0, 0, 0, .15); cursor: pointer; padding: 0; }
+.swatch:hover { transform: scale(1.12); }
+.pop-note { font-size: 12px; color: var(--muted); background: #f6f6f3; padding: 6px 8px; border-radius: 6px; }
+.pop-actions { display: flex; justify-content: space-between; align-items: center; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <strong class="brand">protein-domains</strong>
+  <label class="btn primary" tabindex="0" id="open">Open JSON or CSV…<input id="file" type="file" accept=".json,.csv" multiple hidden></label>
+  <span id="source" class="muted">No file loaded</span>
+  <span class="grow"></span>
+  <button id="dl-svg" class="btn" disabled>Download SVG</button>
+  <button id="dl-csv" class="btn" disabled>Download feature CSV</button>
+</header>
+
+<main>
+  <section class="panel controls" aria-label="Options">
+    <div class="group">
+      <h2>Layout</h2>
+      <div class="grid" id="opt-fields"></div>
+    </div>
+    <div class="group">
+      <h2>Text sizes<span class="hint">pt, blank follows the font size</span></h2>
+      <div class="grid sizes" id="size-fields"></div>
+    </div>
+    <div class="group" id="names-group" hidden>
+      <h2>Protein names<code>--name</code></h2>
+      <div class="grid" id="name-fields"></div>
+    </div>
+    <details class="features" id="features" hidden>
+      <summary>Features<span id="feat-count"></span></summary>
+      <div class="table-tools">
+        <input id="feat-filter" type="search" placeholder="Filter by source, type or label">
+        <label><input id="feat-shown" type="checkbox"> Drawn only</label>
+      </div>
+      <div class="table-wrap">
+        <table id="feat-table">
+          <thead><tr>
+            <th title="show">Draw</th><th class="prot">Protein</th><th>Source</th><th>Type</th>
+            <th>Residues</th><th>Shape</th><th>Label</th><th>Colour</th>
+          </tr></thead>
+          <tbody id="feat-body"></tbody>
+        </table>
+      </div>
+    </details>
+    <div class="cmd" id="cmd-row" hidden>
+      <span class="muted">Same figure from the CLI, using the downloaded CSV</span>
+      <code id="cmd"></code>
+      <button id="copy-cmd" class="btn small">Copy</button>
+    </div>
+  </section>
+
+  <section class="panel stage" aria-label="Preview">
+    <div class="stage-bar">
+      <span id="status"></span>
+      <span class="grow"></span>
+      <label class="zoom">Zoom
+        <select id="zoom">
+          <option value="fit">Fit width</option>
+          <option value="1">100%</option>
+          <option value="1.5">150%</option>
+          <option value="2">200%</option>
+          <option value="3">300%</option>
+        </select>
+      </label>
+    </div>
+    <ul id="issues" class="issues" hidden></ul>
+    <div id="preview" class="preview empty">
+      <div class="drop-hint">
+        <strong>Open an InterProScan or UniProt JSON</strong>
+        <span>or a feature CSV written by the CLI. You can also drop the file here.</span>
+        <span>Then click any domain, bar or site in the figure to change its label or colour.</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="inspector" class="pop" hidden role="dialog" aria-label="Edit element">
+  <div class="pop-head">
+    <div>
+      <div class="pop-title" id="insp-title"></div>
+      <div class="pop-sub" id="insp-sub"></div>
+    </div>
+    <button class="pop-close" id="insp-close" aria-label="Close">×</button>
+  </div>
+  <label class="field"><span class="lab" id="insp-label-name">Label</span><input id="insp-label" data-c="label" autocomplete="off"></label>
+  <div class="field" id="insp-colour">
+    <span class="lab">Colour</span>
+    <div class="colour-row">
+      <input type="color" id="insp-color" data-c="color" aria-label="Colour">
+      <input type="text" id="insp-hex" data-c="hex" spellcheck="false" aria-label="Hex colour">
+      <button class="btn" id="insp-auto" title="Use the automatic colour">Auto</button>
+    </div>
+    <div class="swatches" id="insp-swatches" title="Colours used in this figure"></div>
+  </div>
+  <div class="pop-note" id="insp-note" hidden></div>
+  <div class="pop-actions" id="insp-actions">
+    <button class="btn small" id="insp-hide">Hide from figure</button>
+    <span class="muted" style="font-size:11px">Esc to close</span>
+  </div>
+</div>
+
+<datalist id="fonts">
+  <option value="Arial"><option value="Helvetica"><option value="Liberation Sans">
+  <option value="DejaVu Sans"><option value="Times New Roman"><option value="Courier New">
+</datalist>
+
+<script>
+const $ = s => document.querySelector(s);
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const SHAPES = ['box', 'bar', 'lollipop', 'bracket', 'ss'];
+const isShown = r => ['1', '1.0', 'yes', 'y', 'true'].includes(String(r.show).trim().toLowerCase());
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+
+// layout() keyword arguments, each shown with the CLI flag it stands for
+const OPTIONS = [
+  {key: 'width', flag: '--width', label: 'Width (pt)', type: 'number', def: 400, min: 50, step: 10},
+  {key: 'font', flag: '--font', label: 'Font', type: 'text', def: 'Arial'},
+  {key: 'fs', flag: '--font-size', label: 'Font size (pt)', type: 'number', def: 8, min: 2, step: 0.5},
+  {key: 'label_angle', flag: '--label-angle', label: 'Site label angle', type: 'range', def: -90, min: -90, max: -20, step: 1},
+  {key: 'min_label_scale', flag: '--min-label-scale', label: 'Min label scale', type: 'number', def: 0.7, min: 0.1, max: 1, step: 0.05},
+  {key: 'axis', flag: '--axis', label: 'Residue axis', type: 'select', def: 'full', choices: ['full', 'labels', 'none']},
+  {key: 'numbers', flag: '--numbers', label: 'Boundary numbers', type: 'checkbox', def: false, text: 'under each domain'},
+];
+const SIZES = ['name', 'domain', 'outside', 'site', 'region', 'number', 'axis', 'legend'];
+
+const state = {
+  stem: '',            // downloads are named after the first loaded file
+  rows: [],            // the feature table (features.COLUMNS); every edit lands here
+  opts: Object.fromEntries(OPTIONS.map(o => [o.key, o.def])),
+  sizes: {},           // kind -> pt; absent kinds follow the font size
+  invalid: new Set(),  // fields whose current text layout() cannot take
+  selected: null,      // row index highlighted in the figure
+  svg: null,           // the rendered <svg> element
+};
+
+async function api(path, body) {
+  const res = await fetch(path, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  const out = await res.json();
+  if (out.error) throw new Error(out.error);
+  return out;
+}
+
+const renderOpts = () => ({...state.opts, sizes: {...state.sizes}});
+
+// ---- option fields -----------------------------------------------------------
+function makeField(label, flag, input) {
+  const f = document.createElement('label');
+  f.className = 'field';
+  f.innerHTML = `<span class="lab">${esc(label)}</span>`;
+  f.append(input);
+  if (flag) f.insertAdjacentHTML('beforeend', `<code class="flag">${esc(flag)}</code>`);
+  return f;
+}
+
+function validNumber(v, o) {
+  return Number.isFinite(v) && v >= (o.min ?? -Infinity) && v <= (o.max ?? Infinity);
+}
+
+function setValid(key, input, ok) {
+  input.classList.toggle('invalid', !ok);
+  ok ? state.invalid.delete(key) : state.invalid.add(key);
+}
+
+for (const o of OPTIONS) {
+  let input, node;
+  if (o.type === 'select') {
+    input = document.createElement('select');
+    for (const c of o.choices) input.add(new Option(c, c));
+  } else {
+    input = document.createElement('input');
+    input.type = o.type;
+    for (const k of ['min', 'max', 'step']) if (o[k] != null) input[k] = o[k];
+  }
+  if (o.type === 'checkbox') input.checked = o.def; else input.value = o.def;
+  if (o.key === 'font') input.setAttribute('list', 'fonts');
+  node = input;
+  if (o.type === 'range') {
+    node = document.createElement('div');
+    node.className = 'range';
+    const out = document.createElement('output');
+    out.value = o.def;
+    node.append(input, out);
+    input.addEventListener('input', () => { out.value = input.value; });
+  } else if (o.type === 'checkbox') {
+    node = document.createElement('span');
+    node.className = 'checkline';
+    node.append(input, o.text);
+  }
+  input.addEventListener('input', () => {
+    let v, ok = true;
+    if (o.type === 'checkbox') v = input.checked;
+    else if (o.type === 'number' || o.type === 'range') { v = input.valueAsNumber; ok = validNumber(v, o); }
+    else { v = input.value.trim(); ok = v !== ''; }
+    setValid(o.key, input, ok);
+    if (ok) state.opts[o.key] = v;
+    changed();
+  });
+  $('#opt-fields').append(makeField(o.label, o.flag, node));
+}
+
+for (const k of SIZES) {
+  const input = document.createElement('input');
+  Object.assign(input, {type: 'number', min: 1, step: 0.5, placeholder: 'auto'});
+  input.addEventListener('input', () => {
+    const v = input.valueAsNumber, blank = input.value === '';
+    const ok = blank || validNumber(v, {min: 1});
+    setValid('size-' + k, input, ok);
+    if (blank) delete state.sizes[k]; else if (ok) state.sizes[k] = v;
+    changed();
+  });
+  $('#size-fields').append(makeField(k[0].toUpperCase() + k.slice(1), `--${k}-size`, input));
+}
+
+// ---- row editing ---------------------------------------------------------------
+// A discontinuous domain is one row per fragment sharing a group id; label and
+// colour edits from the figure apply to the whole group.
+function targets(i) {
+  const r = state.rows[i];
+  if (!r.group) return [i];
+  return state.rows.flatMap((q, j) => (q.group === r.group && q.protein === r.protein ? [j] : []));
+}
+
+function patch(idxs, change) {
+  for (const i of idxs) Object.assign(state.rows[i], change);
+  syncInputs();
+  updateCounts();
+  changed();
+}
+
+// the colour a row is drawn with right now (its own, or the automatic one)
+function drawnColour(i) {
+  const svg = state.svg;
+  if (!svg) return null;
+  const shape = svg.querySelector(`[data-row="${i}"] rect, [data-row="${i}"] circle`);
+  if (shape) return shape.getAttribute('fill');
+  const line = svg.querySelector(`[data-row="${i}"] path, path[data-row="${i}"]`);
+  return line ? line.getAttribute('stroke') : null;
+}
+
+const toPicker = c => (/^#[0-9a-f]{6}$/i.test(c || '') ? c.toLowerCase() : '#cccccc');
+
+// every row-bound input carries data-r (row index) and data-c (column)
+function syncInputs() {
+  for (const input of document.querySelectorAll('[data-c][data-r]')) {
+    if (input === document.activeElement) continue;
+    const i = +input.dataset.r, r = state.rows[i];
+    if (!r) continue;
+    const c = input.dataset.c;
+    if (c === 'show') input.checked = isShown(r);
+    else if (c === 'shape') input.value = SHAPES.includes(r.shape) ? r.shape : 'box';
+    else if (c === 'color') {
+      input.value = toPicker(r.color || drawnColour(i));
+      input.parentElement.classList.toggle('auto', !r.color);
+    } else if (c === 'hex') {
+      input.value = r.color;
+      input.placeholder = (drawnColour(i) || 'auto').toUpperCase();
+      input.classList.remove('invalid');
+    } else input.value = r[c] ?? '';
+  }
+  for (const tr of $('#feat-body').rows) tr.classList.toggle('off', !isShown(state.rows[+tr.dataset.r]));
+}
+
+function updateCounts() {
+  const feats = state.rows.filter(r => r.type !== 'Protein');
+  const drawn = feats.filter(isShown).length;
+  $('#feat-count').textContent = `${drawn} of ${feats.length} drawn`;
+}
+
+// ---- protein names and the feature table ---------------------------------------
+function buildNames() {
+  const box = $('#name-fields');
+  box.replaceChildren();
+  state.rows.forEach((r, i) => {
+    if (r.type !== 'Protein') return;
+    const input = document.createElement('input');
+    Object.assign(input, {placeholder: r.protein, autocomplete: 'off'});
+    input.dataset.r = i;
+    input.dataset.c = 'label';
+    input.addEventListener('input', () => patch([i], {label: input.value}));
+    box.append(makeField(`${r.protein} (${r.end} aa)`, '', input));
+  });
+  $('#names-group').hidden = !box.children.length;
+}
+
+function buildTable() {
+  const proteins = new Set(state.rows.filter(r => r.type === 'Protein').map(r => r.protein));
+  $('#feat-table').classList.toggle('multi', proteins.size > 1);
+  const body = $('#feat-body');
+  body.replaceChildren();
+  state.rows.forEach((r, i) => {
+    if (r.type === 'Protein') return;
+    const tr = body.insertRow();
+    tr.dataset.r = i;
+    const grp = r.group ? ` <span class="grp" title="fragment of discontinuous domain ${esc(r.group)}">◆</span>` : '';
+    tr.innerHTML = `
+      <td><input type="checkbox" data-c="show" aria-label="draw"></td>
+      <td class="prot">${esc(r.protein)}</td>
+      <td>${esc(r.source)}</td>
+      <td>${esc(r.type)}</td>
+      <td class="num" title="${esc(r.accession)}">${esc(r.start)}–${esc(r.end)}${grp}</td>
+      <td><select data-c="shape">${SHAPES.map(s => `<option>${s}</option>`).join('')}</select></td>
+      <td><input data-c="label" autocomplete="off"></td>
+      <td><div class="colour-cell"><input type="color" data-c="color" aria-label="colour"><button class="auto-btn" data-act="auto" title="Back to the automatic colour">auto</button></div></td>`;
+    for (const input of tr.querySelectorAll('[data-c]')) input.dataset.r = i;
+  });
+  $('#features').hidden = !body.rows.length;
+  syncInputs();
+  filterTable();
+}
+
+function filterTable() {
+  const q = $('#feat-filter').value.trim().toLowerCase();
+  const drawnOnly = $('#feat-shown').checked;
+  for (const tr of $('#feat-body').rows) {
+    const r = state.rows[+tr.dataset.r];
+    const text = [r.source, r.type, r.label, r.accession, r.protein].join(' ').toLowerCase();
+    tr.hidden = (q && !text.includes(q)) || (drawnOnly && !isShown(r));
+  }
+}
+
+$('#feat-filter').addEventListener('input', filterTable);
+$('#feat-shown').addEventListener('input', filterTable);
+
+$('#feat-body').addEventListener('input', e => {
+  const t = e.target, c = t.dataset.c;
+  if (!c) return;
+  const v = c === 'show' ? (t.checked ? '1' : '0') : c === 'color' ? t.value.toUpperCase() : t.value;
+  patch([+t.dataset.r], {[c]: v});
+});
+
+$('#feat-body').addEventListener('click', e => {
+  const tr = e.target.closest('tr');
+  if (!tr) return;
+  const i = +tr.dataset.r;
+  if (e.target.dataset.act === 'auto') return patch([i], {color: ''});
+  if (e.target.closest('input, select, button')) return;
+  closeInspector();
+  select(i);
+  const el = state.svg?.querySelector(`[data-row="${i}"]`);
+  el?.scrollIntoView({block: 'nearest', inline: 'nearest', behavior: 'smooth'});
+});
+
+// ---- rendering -----------------------------------------------------------------
+let renderSeq = 0, renderTimer = 0;
+
+function changed() {
+  updateCommand();
+  clearTimeout(renderTimer);
+  renderTimer = setTimeout(renderNow, 30);
+}
+
+async function renderNow() {
+  if (!state.rows.length) return;
+  if (state.invalid.size) return showStatus(null, 'Fix the highlighted field to update the figure');
+  const seq = ++renderSeq;
+  try {
+    const fig = await api('/api/render', {rows: state.rows, opts: renderOpts(), tag_rows: true});
+    if (seq === renderSeq) paint(fig);
+  } catch (err) {
+    if (seq === renderSeq) showStatus(null, err.message);
+  }
+}
+
+function paint(fig) {
+  const doc = new DOMParser().parseFromString(fig.svg, 'image/svg+xml');
+  const svg = document.importNode(doc.documentElement, true);
+  state.svg = svg;
+  const preview = $('#preview');
+  preview.classList.remove('empty');
+  preview.replaceChildren(svg);
+  applyZoom();
+  showStatus(fig);
+  const sel = state.selected;
+  if (sel != null && state.rows[sel].type !== 'Protein' && !isShown(state.rows[sel])) {
+    closeInspector();
+    select(null);
+  }
+  highlight();
+  syncInputs();
+  if (!$('#inspector').hidden) buildSwatches();
+}
+
+function applyZoom() {
+  const svg = state.svg;
+  if (!svg) return;
+  const z = $('#zoom').value;
+  const px = parseFloat(svg.getAttribute('width')) * 4 / 3;   // width is in pt
+  svg.style.width = z === 'fit' ? '100%' : `${px * z}px`;
+  svg.style.maxWidth = z === 'fit' ? `${px * 3}px` : 'none';
+  svg.style.height = 'auto';
+}
+$('#zoom').addEventListener('input', () => { applyZoom(); highlight(); });
+
+function showStatus(fig, error) {
+  const chips = [];
+  if (error) chips.push(`<span class="chip err">${esc(error)}</span>`);
+  if (fig) {
+    chips.push(fig.metrics === 'estimate'
+      ? '<span class="chip warn" title="matplotlib or the font is missing; text widths are estimated">text widths estimated</span>'
+      : `<span class="chip" title="text measured with this font file">${esc(fig.metrics)}</span>`);
+    chips.push(fig.overlaps.length
+      ? `<button class="chip warn" id="toggle-issues">${fig.overlaps.length} overlap${fig.overlaps.length > 1 ? 's' : ''}</button>`
+      : '<span class="chip ok">no overlaps</span>');
+    if (fig.omitted.length) {
+      chips.push(`<span class="chip" title="${esc(fig.omitted.join(', '))}">${fig.omitted.length} boundary number${fig.omitted.length > 1 ? 's' : ''} left out</span>`);
+    }
+    for (const w of fig.warnings) chips.push(`<span class="chip warn">${esc(w)}</span>`);
+    const issues = $('#issues');
+    issues.innerHTML = fig.overlaps.map(p => `<li>${esc(p)}</li>`).join('');
+    if (!fig.overlaps.length) issues.hidden = true;
+  }
+  $('#status').innerHTML = chips.join(' ');
+  $('#toggle-issues')?.addEventListener('click', () => { $('#issues').hidden = !$('#issues').hidden; });
+}
+
+// ---- selection and the inspector -----------------------------------------------
+function select(i) {
+  state.selected = i;
+  highlight();
+  for (const tr of $('#feat-body').rows) tr.classList.toggle('selected', i != null && targets(i).includes(+tr.dataset.r));
+}
+
+// one dashed outline per selected row, around all of its drawn parts
+function highlight() {
+  const svg = state.svg;
+  if (!svg) return;
+  svg.querySelector('#gui-selection')?.remove();
+  if (state.selected == null) return;
+  const layer = document.createElementNS(SVG_NS, 'g');
+  layer.id = 'gui-selection';
+  for (const i of targets(state.selected)) {
+    let box = null;
+    for (const part of svg.querySelectorAll(`[data-row="${i}"]`)) {
+      const b = part.getBBox();
+      box = box ? {x0: Math.min(box.x0, b.x), y0: Math.min(box.y0, b.y),
+                   x1: Math.max(box.x1, b.x + b.width), y1: Math.max(box.y1, b.y + b.height)}
+                : {x0: b.x, y0: b.y, x1: b.x + b.width, y1: b.y + b.height};
+    }
+    if (!box) continue;
+    const pad = 1.5, rect = document.createElementNS(SVG_NS, 'rect');
+    for (const [k, v] of Object.entries({x: box.x0 - pad, y: box.y0 - pad, width: box.x1 - box.x0 + 2 * pad,
+                                         height: box.y1 - box.y0 + 2 * pad, rx: 2})) rect.setAttribute(k, v);
+    layer.append(rect);
+  }
+  svg.append(layer);
+}
+
+function openInspector(i, pageX, pageY) {
+  const r = state.rows[i], isProtein = r.type === 'Protein';
+  const pop = $('#inspector');
+  $('#insp-title').textContent = isProtein ? 'Protein' : r.type || 'Feature';
+  $('#insp-sub').textContent = isProtein
+    ? `${r.protein} · ${r.end} aa`
+    : [r.source, r.accession, `residues ${r.start}–${r.end}`, r.shape].filter(Boolean).join(' · ');
+  $('#insp-label-name').textContent = isProtein ? 'Name' : 'Label';
+  $('#insp-colour').hidden = $('#insp-actions').hidden = isProtein;
+  const group = targets(i), drawn = group.filter(j => isShown(state.rows[j])).length;
+  $('#insp-note').hidden = group.length < 2;
+  $('#insp-note').textContent = `Discontinuous domain: label and colour apply to all ${group.length} fragments `
+    + `(${drawn} drawn). The label is drawn on the largest one.`;
+  for (const input of pop.querySelectorAll('[data-c]')) input.dataset.r = i;
+  select(i);
+  pop.hidden = false;
+  syncInputs();
+  buildSwatches();
+  const m = 10, w = pop.offsetWidth, h = pop.offsetHeight;
+  let left = pageX + 14, top = pageY + 14;
+  if (left + w > scrollX + innerWidth - m) left = Math.max(scrollX + m, pageX - w - 14);
+  if (top + h > scrollY + innerHeight - m) top = Math.max(scrollY + m, scrollY + innerHeight - h - m);
+  pop.style.left = `${left}px`;
+  pop.style.top = `${top}px`;
+  $('#insp-label').focus();
+  $('#insp-label').select();
+}
+
+function closeInspector() {
+  $('#inspector').hidden = true;
+}
+
+function buildSwatches() {
+  const box = $('#insp-swatches');
+  box.replaceChildren();
+  const seen = new Set();
+  for (const s of state.svg?.querySelectorAll('[data-row] rect, [data-row] circle') ?? []) {
+    const c = (s.getAttribute('fill') || '').toUpperCase();
+    if (/^#[0-9A-F]{6}$/.test(c)) seen.add(c);
+  }
+  for (const c of seen) {
+    const b = document.createElement('button');
+    Object.assign(b, {className: 'swatch', title: c});
+    b.style.background = c;
+    b.addEventListener('click', () => patch(targets(state.selected), {color: c}));
+    box.append(b);
+  }
+}
+
+const editSelected = change => patch(targets(state.selected), change);
+$('#insp-label').addEventListener('input', e => editSelected({label: e.target.value}));
+$('#insp-color').addEventListener('input', e => editSelected({color: e.target.value.toUpperCase()}));
+$('#insp-hex').addEventListener('input', e => {
+  const m = /^#?([0-9a-f]{6})$/i.exec(e.target.value.trim());
+  e.target.classList.toggle('invalid', !m && e.target.value.trim() !== '');
+  if (m) editSelected({color: '#' + m[1].toUpperCase()});
+});
+$('#insp-auto').addEventListener('click', () => editSelected({color: ''}));
+$('#insp-hide').addEventListener('click', () => { editSelected({show: '0'}); closeInspector(); select(null); });
+$('#insp-close').addEventListener('click', () => { closeInspector(); select(null); });
+
+$('#preview').addEventListener('click', e => {
+  const part = e.target.closest('[data-row]');
+  if (!part) { closeInspector(); select(null); return; }
+  openInspector(+part.dataset.row, e.pageX, e.pageY);
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('#inspector').hidden) { closeInspector(); select(null); }
+});
+
+// ---- files, downloads, the CLI line --------------------------------------------
+async function openFiles(list) {
+  const files = await Promise.all([...list].map(async f => ({name: f.name, text: await f.text()})));
+  if (!files.length) return;
+  const names = files.map(f => f.name).join(', ');
+  try {
+    const {rows} = await api('/api/load', {files});
+    Object.assign(state, {rows, selected: null, stem: files[0].name.replace(/\.(json|csv)$/i, '').replace(/_features$/, '')});
+    closeInspector();
+    $('#source').textContent = names;
+    $('#source').title = names;
+    $('#dl-svg').disabled = $('#dl-csv').disabled = false;
+    $('#cmd-row').hidden = false;
+    buildNames();
+    buildTable();
+    updateCounts();
+    updateCommand();
+    renderNow();
+  } catch (err) {
+    const named = files.some(f => err.message.includes(f.name));
+    showStatus(null, `Could not open ${named ? '' : names + ' '}(${err.message})`);
+  }
+}
+
+$('#file').addEventListener('change', e => { openFiles(e.target.files); e.target.value = ''; });
+$('#open').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#file').click(); } });
+
+addEventListener('dragover', e => { e.preventDefault(); document.body.classList.add('dragging'); });
+addEventListener('dragleave', e => { if (!e.relatedTarget) document.body.classList.remove('dragging'); });
+addEventListener('drop', e => {
+  e.preventDefault();
+  document.body.classList.remove('dragging');
+  if (e.dataTransfer.files.length) openFiles(e.dataTransfer.files);
+});
+
+function download(name, text, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], {type}));
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+$('#dl-svg').addEventListener('click', async () => {
+  try {
+    const fig = await api('/api/render', {rows: state.rows, opts: renderOpts(), tag_rows: false});
+    download(`${state.stem}.svg`, fig.svg, 'image/svg+xml');
+  } catch (err) { showStatus(null, err.message); }
+});
+
+$('#dl-csv').addEventListener('click', async () => {
+  try {
+    const {csv} = await api('/api/csv', {rows: state.rows});
+    download(`${state.stem}_features.csv`, csv, 'text/csv');
+  } catch (err) { showStatus(null, err.message); }
+});
+
+const shellQuote = v => (/^[\w.,:+@%=\/-]+$/.test(String(v)) ? String(v) : `'${String(v).replace(/'/g, `'\\''`)}'`);
+
+function updateCommand() {
+  const stem = state.stem || 'figure';
+  const args = ['protein-domains', `${stem}_features.csv`, '-o', `${stem}.svg`];
+  for (const o of OPTIONS) {
+    const v = state.opts[o.key];
+    if (v === o.def) continue;
+    if (o.type === 'checkbox') args.push(o.flag);
+    else args.push(o.flag, v);
+  }
+  for (const k of SIZES) if (k in state.sizes) args.push(`--${k}-size`, state.sizes[k]);
+  $('#cmd').textContent = args.map(shellQuote).join(' ');
+}
+
+$('#copy-cmd').addEventListener('click', async () => {
+  await navigator.clipboard.writeText($('#cmd').textContent);
+  $('#copy-cmd').textContent = 'Copied';
+  setTimeout(() => { $('#copy-cmd').textContent = 'Copy'; }, 1200);
+});
+
+updateCommand();
+</script>
+</body>
+</html>

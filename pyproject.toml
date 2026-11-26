@@ -1,0 +1,21 @@
+[project]
+name = "protein-domains"
+version = "0.1.0"
+description = "Editable, DOG-style protein domain diagrams as SVG from UniProt, InterProScan or a feature table"
+authors = [
+    { name = "Iason Andronis", email = "iason.andronis@fysik.su.se" }
+]
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+# exact text widths from the installed font; without it widths are estimated
+metrics = ["matplotlib>=3.5"]
+
+[project.scripts]
+protein-domains = "protein_domains.cli:main"
+protein-domains-gui = "protein_domains.gui:main"
+
+[build-system]
+requires = ["uv_build>=0.13.1,<0.14.0"]
+build-backend = "uv_build"
