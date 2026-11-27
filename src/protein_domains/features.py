@@ -118,12 +118,6 @@ def csv_rows(text):
     return [{c: r.get(c, "") or "" for c in COLUMNS} for r in reader]
 
 
-def read_csv(path):
-    # newline="" keeps CRLF inside quoted fields, as csv expects
-    with open(path, newline="", encoding="utf-8-sig") as fh:
-        return csv_rows(fh.read())
-
-
 def csv_text(rows):
     buf = io.StringIO()
     w = csv.DictWriter(buf, fieldnames=COLUMNS)
