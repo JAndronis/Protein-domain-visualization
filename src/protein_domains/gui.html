@@ -48,6 +48,12 @@ code { font-family: var(--mono); font-size: 11.5px; }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
 .btn.primary:hover { background: #1c47b8; }
 .btn.small { height: 24px; padding: 0 8px; font-size: 12px; }
+#fetch { display: inline-flex; gap: 6px; }
+#acc {
+  width: 200px; max-width: 100%; height: 30px; padding: 0 10px;
+  border: 1px solid var(--line-strong); border-radius: 6px; background: var(--panel);
+}
+#acc:disabled { opacity: .45; }
 .btn:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible {
   outline: 2px solid var(--accent); outline-offset: 1px;
 }
@@ -181,6 +187,10 @@ body.dragging .preview { outline: 2px dashed var(--accent); outline-offset: -8px
 <header class="topbar">
   <strong class="brand">protein-domains</strong>
   <label class="btn primary" tabindex="0" id="open">Open JSON or CSV…<input id="file" type="file" accept=".json,.csv" multiple hidden></label>
+  <form id="fetch">
+    <input id="acc" type="text" placeholder="UniProt ID, e.g. P68871" aria-label="UniProt ID" spellcheck="false" autocomplete="off">
+    <button class="btn">Fetch</button>
+  </form>
   <span id="source" class="muted">No file loaded</span>
   <span class="grow"></span>
   <button id="dl-svg" class="btn" disabled>Download SVG</button>
@@ -242,7 +252,7 @@ body.dragging .preview { outline: 2px dashed var(--accent); outline-offset: -8px
     <div id="preview" class="preview empty">
       <div class="drop-hint">
         <strong>Open an InterProScan or UniProt JSON</strong>
-        <span>or a feature CSV written by the CLI. You can also drop the file here.</span>
+        <span>or a feature CSV written by the CLI. You can also drop the file here, or fetch a UniProt entry by its ID.</span>
         <span>Then click any domain, bar or site in the figure to change its label or colour.</span>
       </div>
     </div>
@@ -692,28 +702,51 @@ document.addEventListener('keydown', e => {
 });
 
 // ---- files, downloads, the CLI line --------------------------------------------
+function loaded(rows, stem, source) {
+  Object.assign(state, {rows, selected: null, stem});
+  closeInspector();
+  $('#source').textContent = source;
+  $('#source').title = source;
+  $('#dl-svg').disabled = $('#dl-csv').disabled = false;
+  $('#cmd-row').hidden = false;
+  buildNames();
+  buildTable();
+  updateCounts();
+  updateCommand();
+  renderNow();
+}
+
 async function openFiles(list) {
   const files = await Promise.all([...list].map(async f => ({name: f.name, text: await f.text()})));
   if (!files.length) return;
   const names = files.map(f => f.name).join(', ');
   try {
     const {rows} = await api('/api/load', {files});
-    Object.assign(state, {rows, selected: null, stem: files[0].name.replace(/\.(json|csv)$/i, '').replace(/_features$/, '')});
-    closeInspector();
-    $('#source').textContent = names;
-    $('#source').title = names;
-    $('#dl-svg').disabled = $('#dl-csv').disabled = false;
-    $('#cmd-row').hidden = false;
-    buildNames();
-    buildTable();
-    updateCounts();
-    updateCommand();
-    renderNow();
+    loaded(rows, files[0].name.replace(/\.(json|csv)$/i, '').replace(/_features$/, ''), names);
   } catch (err) {
     const named = files.some(f => err.message.includes(f.name));
     showStatus(null, `Could not open ${named ? '' : names + ' '}(${err.message})`);
   }
 }
+
+$('#fetch').addEventListener('submit', async e => {
+  e.preventDefault();
+  const accessions = $('#acc').value.split(/[\s,;]+/).filter(Boolean);
+  if (!accessions.length) return;
+  const ids = accessions.join(', ');
+  const busy = on => { $('#acc').disabled = $('#fetch button').disabled = on; };
+  busy(true);
+  $('#status').innerHTML = `<span class="chip">${esc(`Fetching ${ids} from UniProt…`)}</span>`;
+  try {
+    const {rows} = await api('/api/fetch', {accessions});
+    loaded(rows, accessions[0], `UniProt ${ids}`);
+    $('#acc').value = '';
+  } catch (err) {
+    const named = accessions.some(a => err.message.includes(a));
+    showStatus(null, `Could not fetch ${named ? '' : ids + ' '}(${err.message})`);
+  }
+  busy(false);
+});
 
 $('#file').addEventListener('change', e => { openFiles(e.target.files); e.target.value = ''; });
 $('#open').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#file').click(); } });

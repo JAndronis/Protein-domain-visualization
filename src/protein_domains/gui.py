@@ -2,9 +2,10 @@
 protein-domains-gui -- live preview and click-to-edit for protein-domains, in the browser.
 
 Serves one page on localhost and opens it. Load an InterProScan / UniProt JSON or a
-feature CSV, set the same options as the CLI, and click any drawn element to change
-its label or colour. Every edit re-renders with the same layout as the CLI, and the
-page downloads the SVG and the edited feature CSV.
+feature CSV, or fetch a UniProt entry by ID (e.g. P68871 or HBB_HUMAN). Set the same
+options as the CLI, and click any drawn element to change its label or colour. Every
+edit re-renders with the same layout as the CLI, and the page downloads the SVG and
+the edited feature CSV.
 
 Standard library only. Stop with Ctrl+C.
 """
@@ -12,6 +13,7 @@ Standard library only. Stop with Ctrl+C.
 import argparse
 import dataclasses
 import json
+import sys
 import tempfile
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -20,6 +22,7 @@ from pathlib import Path
 from .features import csv_text
 from .inputs import load_inputs
 from .render import layout
+from .uniprot import UNIPROT_ID
 
 PAGE = Path(__file__).with_name("gui.html")
 SUFFIXES = (".json", ".csv")
@@ -46,6 +49,16 @@ def load(files):
             raise SystemExit(msg) from None
 
 
+def fetch(accessions):
+    """UniProt IDs -> feature rows. The ID check keeps load_inputs on its fetch branch, never a local path."""
+    if not accessions:
+        sys.exit("enter a UniProt ID")
+    for a in accessions:
+        if not UNIPROT_ID.fullmatch(a):
+            sys.exit(f"'{a}' is not a UniProt accession or entry name")
+    return {"rows": load_inputs(accessions, None)}
+
+
 def figure(body):
     fig = layout(body["rows"], tag_rows=body["tag_rows"], **body["opts"])
     return dataclasses.asdict(fig)
@@ -53,6 +66,7 @@ def figure(body):
 
 ROUTES = {
     "/api/load": lambda body: load(body["files"]),
+    "/api/fetch": lambda body: fetch(body["accessions"]),
     "/api/render": figure,
     "/api/csv": lambda body: {"csv": csv_text(body["rows"])},
 }

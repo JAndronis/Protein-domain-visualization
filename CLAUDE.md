@@ -28,7 +28,7 @@ uv run protein-domains test_features.csv -o fig.svg --numbers
 # other inputs: UniProt accession (fetched from rest.uniprot.org) or UniProt entry JSON; several can be stacked
 uv run protein-domains P12345 entry.json -o fig.svg
 
-# browser GUI on localhost: open a JSON/CSV, set the CLI options, click elements to edit label/colour
+# browser GUI on localhost: open a JSON/CSV or fetch a UniProt ID, set the CLI options, click elements to edit label/colour
 uv run protein-domains-gui            # --port N, --no-browser
 
 uvx ruff format src

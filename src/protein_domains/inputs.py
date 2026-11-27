@@ -1,13 +1,12 @@
 """Detect each input's format and turn it into feature rows."""
 
 import json
-import re
 import sys
 from pathlib import Path
 
 from .features import read_csv
 from .interproscan import parse_iprscan
-from .uniprot import fetch_uniprot, parse_uniprot
+from .uniprot import UNIPROT_ID, fetch_uniprot, parse_uniprot
 
 
 def load_inputs(inputs, names):
@@ -28,7 +27,7 @@ def load_inputs(inputs, names):
                 rows += parse_uniprot(j)
             else:
                 sys.exit(f"{p}: not a recognised UniProt or InterProScan JSON")
-        elif re.fullmatch(r"[A-Za-z0-9_]{4,12}", item):
+        elif UNIPROT_ID.fullmatch(item):
             print(f"fetching {item} from UniProt ...", file=sys.stderr)
             rows += parse_uniprot(fetch_uniprot(item))
         else:

@@ -1,10 +1,15 @@
 """UniProtKB entry JSON -> feature rows."""
 
 import json
+import re
+import sys
+import urllib.error
 import urllib.request
 
 from .features import row, site_label
 
+
+UNIPROT_ID = re.compile(r"[A-Za-z0-9_]{4,12}")
 
 UNIPROT_SHAPE = {
     # boxes on the backbone
@@ -44,6 +49,14 @@ UNIPROT_SHAPE = {
 
 def parse_uniprot(j):
     acc = j.get("primaryAccession", "protein")
+    if j.get("entryType") == "Inactive":
+        why = j.get("inactiveReason") or {}
+        detail = why.get("deletedReason") or ", ".join(why.get("mergeDemergeTo") or [])
+        sys.exit(
+            f"{acc}: inactive UniProt entry ({why.get('inactiveReasonType', 'unknown reason')}"
+            + (f": {detail}" if detail else "")
+            + ")"
+        )
     gene = None
     if j.get("genes"):
         gene = (j["genes"][0].get("geneName") or {}).get("value")
@@ -97,5 +110,14 @@ def parse_uniprot(j):
 
 def fetch_uniprot(acc):
     url = f"https://rest.uniprot.org/uniprotkb/{acc}.json"
-    with urllib.request.urlopen(url, timeout=30) as r:
-        return json.loads(r.read().decode())
+    try:
+        with urllib.request.urlopen(url, timeout=30) as r:
+            return json.loads(r.read().decode())
+    except urllib.error.HTTPError as e:
+        try:
+            msg = "; ".join(json.loads(e.read())["messages"])
+        except (ValueError, KeyError, TypeError):
+            msg = str(e.reason)
+        sys.exit(f"{acc}: {msg} (HTTP {e.code})")
+    except OSError as e:
+        sys.exit(f"{acc}: could not reach UniProt ({getattr(e, 'reason', e)})")
