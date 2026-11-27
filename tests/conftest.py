@@ -10,6 +10,9 @@ collect_ignore = [] if importlib.util.find_spec("playwright") else ["e2e"]
 @pytest.fixture
 def estimate(monkeypatch):
     """Force the text-width estimate so output does not depend on this machine's fonts."""
+    # submodules already imported would still satisfy `from matplotlib.x import y`
+    for name in [m for m in sys.modules if m.startswith("matplotlib.")]:
+        monkeypatch.delitem(sys.modules, name)
     monkeypatch.setitem(sys.modules, "matplotlib", None)
 
 
