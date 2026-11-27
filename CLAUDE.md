@@ -54,8 +54,8 @@ new a parser extracts must fit that schema, and anything `render()` needs must b
 
 Modules are organised by what they know, not by pipeline step:
 
-- `features.py` owns the row schema, CSV read/write, and `site_label` (PTM abbreviations), which both
-  parsers share.
+- `features.py` owns the row schema, CSV read/write, `parse_row` (the one check of every cell `layout()` reads; colours must be `#RRGGBB` because they go into SVG attributes), and `site_label` (PTM abbreviations,
+  shared by both parsers).
 - `uniprot.py` and `interproscan.py` each own one source format. They map source feature types to a
   default `shape` and `show` flag through `UNIPROT_SHAPE` and `IPRSCAN_SOURCE`. Unknown types default to
   `box`, hidden. Residue-level InterProScan sites (PIRSR/CDD) become `lollipop` rows, or `bar` rows when

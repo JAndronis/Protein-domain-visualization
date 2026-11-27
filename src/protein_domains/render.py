@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .canvas import Canvas, darker
+from .features import parse_row
 from .geometry import pack, rect_hit, spread
 from .metrics import Metrics
 
@@ -136,28 +137,19 @@ def layout(
     STEM, ELBOW = 1.2 * fs, 1.0 * fs
     G = 0.4 * fs  # generic small gap
 
+    rows = [parse_row(i, r) for i, r in enumerate(rows)]
     prots = OrderedDict()
-    for i, r in enumerate(rows):
+    for r in rows:
         if r["type"] == "Protein":
             prots[r["protein"]] = dict(
-                name=r["label"] or r["protein"], L=int(float(r["end"])), feats=[], row=i
+                name=r["label"] or r["protein"], L=r["e"], feats=[], row=r["row"]
             )
-    for i, r in enumerate(rows):
-        if r["type"] == "Protein" or str(r["show"]).strip().lower() not in (
-            "1",
-            "1.0",
-            "yes",
-            "y",
-            "true",
-        ):
+    for f in rows:
+        if f["type"] == "Protein" or not f["shown"]:
             continue
-        if r["protein"] not in prots:
-            sys.exit(f"feature for unknown protein '{r['protein']}' (no 'Protein' row)")
-        f = dict(r, row=i)
-        f["s"], f["e"] = int(float(r["start"])), int(float(r["end"]))
-        f["shape"] = (r["shape"] or "box").strip().lower()
-        f["label"] = f["label"].strip()
-        prots[r["protein"]]["feats"].append(f)
+        if f["protein"] not in prots:
+            sys.exit(f"feature for unknown protein '{f['protein']}' (no 'Protein' row)")
+        prots[f["protein"]]["feats"].append(f)
 
     Lmax = max(p["L"] for p in prots.values())
     sx = width / Lmax
@@ -169,8 +161,8 @@ def layout(
     colour_key = {}
 
     def colour(f):
-        if f["color"].strip():
-            return f["color"].strip()
+        if f["color"]:
+            return f["color"]
         if f["shape"] == "box":
             k = f["group"] or f["label"]
             if k not in colour_key:

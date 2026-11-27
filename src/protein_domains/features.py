@@ -2,6 +2,8 @@
 
 import csv
 import io
+import re
+import sys
 from pathlib import Path
 
 
@@ -41,6 +43,42 @@ COLUMNS = [
     "color",
     "group",
 ]
+
+
+SHAPES = ("box", "bar", "lollipop", "bracket", "ss")
+TRUE = ("1", "1.0", "yes", "y", "true")
+HEX = re.compile(r"#[0-9A-Fa-f]{6}")
+
+
+def parse_row(i, r):
+    """Check one row for layout() and add its typed fields; bad cells exit naming the row.
+
+    The colour goes into SVG attributes and darker() reads it as hex, so only #RRGGBB passes.
+    """
+    where = f"{r['protein']} {r['type']} '{r['label']}'"
+
+    def num(c):
+        try:
+            return int(float(r[c]))
+        except ValueError:
+            sys.exit(f"{where}: {c} '{r[c]}' is not a number")
+
+    shape = (r["shape"] or "box").strip().lower()
+    if shape not in SHAPES:
+        sys.exit(f"{where}: shape '{shape}' is not one of {', '.join(SHAPES)}")
+    color = r["color"].strip()
+    if color and not HEX.fullmatch(color):
+        sys.exit(f"{where}: color '{color}' is not #RRGGBB")
+    return dict(
+        r,
+        row=i,
+        s=num("start"),
+        e=num("end"),
+        shape=shape,
+        color=color,
+        label=r["label"].strip(),
+        shown=str(r["show"]).strip().lower() in TRUE,
+    )
 
 
 def row(**kw):

@@ -18,7 +18,8 @@ class Canvas:
     """Collects SVG fragments plus the geometry of every element for the overlap check."""
 
     def __init__(self, M, font):
-        self.M, self.A = M, f'font-family="{escape(font)}"'
+        family = escape(font, {'"': "&quot;"})
+        self.M, self.A = M, f'font-family="{family}"'
         self.texts = []  # (bbox, owner, description)
         self.boxes = []  # (bbox, owner)        filled shapes
         self.segs = []  # (p, q, owner)        lines
