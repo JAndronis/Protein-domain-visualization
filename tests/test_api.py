@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from conftest import DATA
+from paths import DATA
 from protein_domains.api import ROUTES, handle, handle_json
 from protein_domains.features import csv_rows, csv_text
 from protein_domains.inputs import rows_from_text

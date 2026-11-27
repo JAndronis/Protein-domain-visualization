@@ -1,10 +1,10 @@
 import sys
-from pathlib import Path
+import importlib.util
 
 import pytest
 
-DATA = Path(__file__).parent / "data"
-GOLDEN = Path(__file__).parent / "golden"
+# the browser tests need the e2e dependency group; a plain dev environment skips them
+collect_ignore = [] if importlib.util.find_spec("playwright") else ["e2e"]
 
 
 @pytest.fixture

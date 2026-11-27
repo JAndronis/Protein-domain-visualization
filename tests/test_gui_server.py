@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 import protein_domains.gui as gui
-from conftest import DATA
+from paths import DATA
 from protein_domains.api import handle_json
 from protein_domains.features import csv_rows
 

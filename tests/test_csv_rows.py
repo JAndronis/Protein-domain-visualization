@@ -1,6 +1,6 @@
 import pytest
 
-from conftest import DATA
+from paths import DATA
 from protein_domains.features import COLUMNS, csv_rows, read_csv
 
 QUOTED = 'protein,label\r\nP1,"two\nlines"\r\nP2,plain\r\n'

@@ -5,7 +5,7 @@ import urllib.request
 
 import pytest
 
-from conftest import DATA
+from paths import DATA
 from protein_domains.uniprot import fetch_uniprot, read_uniprot_response, uniprot_url
 
 ENTRY = (DATA / "mini_uniprot.json").read_text(encoding="utf-8")

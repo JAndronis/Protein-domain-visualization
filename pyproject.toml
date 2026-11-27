@@ -18,6 +18,8 @@ protein-domains-gui = "protein_domains.gui:main"
 
 [dependency-groups]
 dev = ["pytest"]
+# browser tests: uv run --group e2e pytest -m e2e
+e2e = ["pytest", "playwright"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

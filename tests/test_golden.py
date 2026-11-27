@@ -4,7 +4,7 @@ import sys
 
 import pytest
 
-from conftest import DATA, GOLDEN
+from paths import DATA, GOLDEN
 from protein_domains import cli
 from protein_domains.inputs import load_inputs
 from protein_domains.render import layout
