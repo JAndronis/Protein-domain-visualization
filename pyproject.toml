@@ -16,6 +16,18 @@ metrics = ["matplotlib>=3.5"]
 protein-domains = "protein_domains.cli:main"
 protein-domains-gui = "protein_domains.gui:main"
 
+[dependency-groups]
+dev = ["pytest"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests"]
+addopts = "-m 'not e2e and not network'"
+markers = [
+    "e2e: drives a real browser; needs the Pyodide CDN and playwright",
+    "network: needs the public internet",
+]
+
 [build-system]
 requires = ["uv_build>=0.13.1,<0.14.0"]
 build-backend = "uv_build"

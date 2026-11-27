@@ -1,0 +1,11 @@
+{
+ "entryType": "UniProtKB reviewed (Swiss-Prot)",
+ "primaryAccession": "P00001",
+ "genes": [{"geneName": {"value": "DEMO1"}}],
+ "sequence": {"length": 120, "value": "MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQAPILSRVGDGTQDNLSGAEKAVQVKVKALPDAQFEVVHSLAKWKRQTLGQHDFSAGEGLYTHMKALRPDEDRLSPLHSVYVDQWDWERVMGDGERQFSTLKSTVEAIWAGIKATEAAVSEEFGLAPFLPDQIHFVHSQELLSRYPDLDAKGRERAIAKDLGAVFLVGIGGKLSDGHRHDVRAPDYDDWSTPSELGHAGLNGDILVWNPVLEDAFELSSMGIRVDADTLKHQLALTGDEDRLELEWHQALLRGEMPQTIGGGIGQSRLTMLLLQLPHIGQVQAGVWPAAVRESVAGLL"},
+ "features": [
+  {"type": "Domain", "description": "Demo domain", "location": {"start": {"value": 10}, "end": {"value": 60}}},
+  {"type": "Modified residue", "description": "Phosphoserine", "location": {"start": {"value": 30}, "end": {"value": 30}}},
+  {"type": "Disulfide bond", "description": "", "location": {"start": {"value": 70}, "end": {"value": 110}}}
+ ]
+}

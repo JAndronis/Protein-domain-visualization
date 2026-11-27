@@ -1,0 +1,326 @@
+{
+ "interproscan-version": "6.0.3.0",
+ "results": [
+  {
+   "sequence": "MTKGLFEPGSYSVRAAGHNGSLPMEVTLTDDRIKSIEIDTSGESKGITSPVFERIPKAIIEGQTLNVDTVSGATVTSKGILAGVADAIEAAGGDPEEFRNRPKYQADQADSPDEKSADVVVLGSGGAGLSAAIGAIDKGAKVILLEKFPSLGGNTTRTGGQINSADPEWQKGFDAFPGEVNNLKGIYQMDEANIPEAYRPQFRELKDELEKYFADMEKGENYLFDSENLFCIQTLLGGTRKDLDGHVTYGNYDLVSNLTHKGRQTIEWMKTKGVEFDEEHVTEPVGASWRRAREPIPTGGYGFIDPLQKYFTQQGGEIITDCQAKELLVEDGKIVGVKAQYSNGNDLTVHAKSGVVMATGGYSANYEMVKKYDNYWGNLPETIPTTNSPALTGDGIAMGLSVNAALVDMGFAQLMPSADPITGNIFSGIDCPPSDFVFVNLEGKRFVNEYGTRDQLCQAIFDQGGLIYNISDKNIAATRFNSTDEQLENDIKNDACFRADTLEELAEQINIDPEVLVDTIEKYNQYVEDGHDPEFNKGSFNYKVEVPPFYATPRSPATHHTMGGLKINVNAQVINEAGEAIDGLFAAGEVAGGIHAGNRLGGNALIDIFTYGRIAGENAASNR",
+   "md5": "48EA84738AA40885C186611C897E3004",
+   "matches": [
+    {
+     "signature": {
+      "accession": "mobidb-lite",
+      "name": "disorder_prediction",
+      "description": "Consensus disorder prediction",
+      "type": "Region",
+      "signatureLibraryRelease": {
+       "library": "MobiDB-lite",
+       "version": "4.0"
+      },
+      "entry": null
+     },
+     "model-ac": "mobidb-lite",
+     "source": "MobiDB-lite",
+     "locations": [
+      {
+       "start": 92,
+       "end": 115,
+       "representative": false,
+       "location-fragments": [
+        {
+         "start": 92,
+         "end": 115,
+         "dc-status": "CONTINUOUS"
+        }
+       ],
+       "sequence-feature": null
+      }
+     ]
+    },
+    {
+     "signature": {
+      "accession": "PIRSR000171-1",
+      "name": "PIRSR000171-1",
+      "description": null,
+      "type": "Region",
+      "signatureLibraryRelease": {
+       "library": "PIRSR",
+       "version": "2025_05"
+      },
+      "entry": null
+     },
+     "model-ac": "PIRSR000171-1",
+     "evalue": 2.4e-11,
+     "score": 40.7,
+     "source": "PIRSR",
+     "locations": [
+      {
+       "start": 313,
+       "end": 455,
+       "representative": false,
+       "hmmStart": 159,
+       "hmmEnd": 291,
+       "hmmLength": 592,
+       "hmmBounds": "INCOMPLETE",
+       "evalue": 2.4e-11,
+       "score": 40.7,
+       "envelopeStart": 297,
+       "envelopeEnd": 465,
+       "location-fragments": [
+        {
+         "start": 313,
+         "end": 455,
+         "dc-status": "CONTINUOUS"
+        }
+       ],
+       "sites": [
+        {
+         "description": "ACT_SITE: Proton acceptor",
+         "numLocations": 1,
+         "siteLocations": [
+          {
+           "start": 453,
+           "end": 453,
+           "residue": "R"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "signature": {
+      "accession": "PIRSR000238-1",
+      "name": "PIRSR000238-1",
+      "description": null,
+      "type": "Region",
+      "signatureLibraryRelease": {
+       "library": "PIRSR",
+       "version": "2025_05"
+      },
+      "entry": null
+     },
+     "model-ac": "PIRSR000238-1",
+     "evalue": 0.0013,
+     "score": 15.4,
+     "source": "PIRSR",
+     "locations": [
+      {
+       "start": 106,
+       "end": 155,
+       "representative": false,
+       "hmmStart": 204,
+       "hmmEnd": 251,
+       "hmmLength": 520,
+       "hmmBounds": "INCOMPLETE",
+       "evalue": 0.0013,
+       "score": 15.4,
+       "envelopeStart": 48,
+       "envelopeEnd": 166,
+       "location-fragments": [
+        {
+         "start": 106,
+         "end": 155,
+         "dc-status": "CONTINUOUS"
+        }
+       ],
+       "sites": [
+        {
+         "description": "NP_BIND: FAD",
+         "numLocations": 1,
+         "siteLocations": [
+          {
+           "start": 118,
+           "end": 133,
+           "residue": "DVVVLGSGGAGLSAAI"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "signature": {
+      "accession": "SSF51905",
+      "name": null,
+      "description": "FAD/NAD(P)-binding domain",
+      "type": "Homologous_superfamily",
+      "signatureLibraryRelease": {
+       "library": "SUPERFAMILY",
+       "version": "1.75"
+      },
+      "entry": {
+       "accession": "IPR036188",
+       "name": "FAD/NAD-bd_sf",
+       "description": "FAD/NAD(P)-binding domain superfamily",
+       "type": "Homologous_superfamily"
+      }
+     },
+     "model-ac": "0039664",
+     "source": "SUPERFAMILY",
+     "locations": [
+      {
+       "start": 103,
+       "end": 621,
+       "representative": false,
+       "hmmLength": 357,
+       "evalue": 1.79e-55,
+       "location-fragments": [
+        {
+         "start": 103,
+         "end": 176,
+         "dc-status": "C_TERMINAL_DISC"
+        },
+        {
+         "start": 207,
+         "end": 230,
+         "dc-status": "NC_TERMINAL_DISC"
+        },
+        {
+         "start": 257,
+         "end": 426,
+         "dc-status": "NC_TERMINAL_DISC"
+        },
+        {
+         "start": 564,
+         "end": 621,
+         "dc-status": "N_TERMINAL_DISC"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "signature": {
+      "accession": "SSF56425",
+      "name": null,
+      "description": "Succinate dehydrogenase/fumarate reductase flavoprotein, catalytic domain",
+      "type": "Homologous_superfamily",
+      "signatureLibraryRelease": {
+       "library": "SUPERFAMILY",
+       "version": "1.75"
+      },
+      "entry": {
+       "accession": "IPR027477",
+       "name": "Succ_DH/fumarate_Rdtase_cat_sf",
+       "description": "Succinate dehydrogenase/fumarate reductase flavoprotein, catalytic domain superfamily",
+       "type": "Homologous_superfamily"
+      }
+     },
+     "model-ac": "0036733",
+     "source": "SUPERFAMILY",
+     "locations": [
+      {
+       "start": 411,
+       "end": 560,
+       "representative": false,
+       "hmmLength": 146,
+       "evalue": 8.97e-33,
+       "location-fragments": [
+        {
+         "start": 411,
+         "end": 560,
+         "dc-status": "CONTINUOUS"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "signature": {
+      "accession": "PF00890",
+      "name": "FAD_binding_2",
+      "description": "FAD binding domain",
+      "type": "Domain",
+      "signatureLibraryRelease": {
+       "library": "Pfam",
+       "version": "39.0"
+      },
+      "entry": {
+       "accession": "IPR003953",
+       "name": "FAD-dep_OxRdtase_2_FAD-bd",
+       "description": "FAD-dependent oxidoreductase 2, FAD-binding domain",
+       "type": "Domain"
+      }
+     },
+     "model-ac": "PF00890",
+     "evalue": 1.6e-61,
+     "score": 220.4,
+     "source": "Pfam",
+     "locations": [
+      {
+       "start": 118,
+       "end": 605,
+       "representative": true,
+       "hmmStart": 1,
+       "hmmEnd": 414,
+       "hmmLength": 414,
+       "hmmBounds": "COMPLETE",
+       "evalue": 5.3e-61,
+       "score": 218.7,
+       "envelopeStart": 118,
+       "envelopeEnd": 605,
+       "location-fragments": [
+        {
+         "start": 118,
+         "end": 605,
+         "dc-status": "CONTINUOUS"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "signature": {
+      "accession": "PF04205",
+      "name": "FMN_bind",
+      "description": "FMN-binding domain",
+      "type": "Domain",
+      "signatureLibraryRelease": {
+       "library": "Pfam",
+       "version": "39.0"
+      },
+      "entry": {
+       "accession": "IPR007329",
+       "name": "FMN-bd",
+       "description": "FMN-binding",
+       "type": "Domain"
+      }
+     },
+     "model-ac": "PF04205",
+     "evalue": 1.5e-09,
+     "score": 49.6,
+     "source": "Pfam",
+     "locations": [
+      {
+       "start": 17,
+       "end": 89,
+       "representative": false,
+       "hmmStart": 1,
+       "hmmEnd": 77,
+       "hmmLength": 77,
+       "hmmBounds": "COMPLETE",
+       "evalue": 2.8e-09,
+       "score": 48.7,
+       "envelopeStart": 17,
+       "envelopeEnd": 89,
+       "location-fragments": [
+        {
+         "start": 17,
+         "end": 89,
+         "dc-status": "CONTINUOUS"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "xref": [
+    {
+     "name": "Sequence1",
+     "id": "Sequence1"
+    }
+   ]
+  }
+ ]
+}
