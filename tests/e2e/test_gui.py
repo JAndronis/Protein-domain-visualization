@@ -14,6 +14,8 @@ FIGURE = "#preview svg [data-row]"
 def open_app(page, url):
     page.goto(url)
     page.wait_for_selector("#file", state="attached")
+    if page.evaluate("!!document.getElementById('py-sources')"):
+        page.wait_for_selector("body[data-py=ready]", state="attached", timeout=180_000)
 
 
 def test_uploading_a_csv_draws_its_features(page, app_url):

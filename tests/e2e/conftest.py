@@ -36,16 +36,25 @@ def static_site(tmp_path_factory):
     return out
 
 
-@pytest.fixture(params=["server"])
+def serving(mode, static_site):
+    if mode == "server":
+        return serve(Handler)
+    handler = functools.partial(SimpleHTTPRequestHandler, directory=str(static_site))
+    return serve(handler)
+
+
+@pytest.fixture(params=["server", "static"])
 def app_url(request, static_site):
     """URL of the GUI in each way it is served."""
-    if request.param == "server":
-        httpd, url = serve(Handler)
-    else:
-        handler = functools.partial(
-            SimpleHTTPRequestHandler, directory=str(static_site)
-        )
-        httpd, url = serve(handler)
+    httpd, url = serving(request.param, static_site)
+    yield url
+    httpd.shutdown()
+    httpd.server_close()
+
+
+@pytest.fixture
+def static_url(static_site):
+    httpd, url = serving("static", static_site)
     yield url
     httpd.shutdown()
     httpd.server_close()
