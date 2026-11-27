@@ -16,7 +16,7 @@ OUTPUT
                           show   1/0  draw this row or not
                           shape  box | bar | lollipop | bracket | ss
                           label  text drawn on the feature
-                          color  hex colour (blank = automatic)
+                          color  #RRGGBB (blank = automatic)
                           group  rows with the same group share a colour and are
                                  drawn as one discontinuous domain
                         Row order within a protein is irrelevant; protein order

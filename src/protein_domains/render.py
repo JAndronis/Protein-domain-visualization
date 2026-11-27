@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .canvas import Canvas, darker
+from .features import is_shown, parse_row
 from .geometry import pack, rect_hit, spread
 from .metrics import Metrics
 
@@ -140,24 +141,14 @@ def layout(
     for i, r in enumerate(rows):
         if r["type"] == "Protein":
             prots[r["protein"]] = dict(
-                name=r["label"] or r["protein"], L=int(float(r["end"])), feats=[], row=i
+                name=r["label"] or r["protein"], L=parse_row(i, r)["e"], feats=[], row=i
             )
     for i, r in enumerate(rows):
-        if r["type"] == "Protein" or str(r["show"]).strip().lower() not in (
-            "1",
-            "1.0",
-            "yes",
-            "y",
-            "true",
-        ):
+        if r["type"] == "Protein" or not is_shown(r):
             continue
         if r["protein"] not in prots:
             sys.exit(f"feature for unknown protein '{r['protein']}' (no 'Protein' row)")
-        f = dict(r, row=i)
-        f["s"], f["e"] = int(float(r["start"])), int(float(r["end"]))
-        f["shape"] = (r["shape"] or "box").strip().lower()
-        f["label"] = f["label"].strip()
-        prots[r["protein"]]["feats"].append(f)
+        prots[r["protein"]]["feats"].append(parse_row(i, r))
 
     Lmax = max(p["L"] for p in prots.values())
     sx = width / Lmax
@@ -169,8 +160,8 @@ def layout(
     colour_key = {}
 
     def colour(f):
-        if f["color"].strip():
-            return f["color"].strip()
+        if f["color"]:
+            return f["color"]
         if f["shape"] == "box":
             k = f["group"] or f["label"]
             if k not in colour_key:

@@ -2,6 +2,8 @@
 
 import csv
 import io
+import re
+import sys
 from pathlib import Path
 
 
@@ -43,6 +45,48 @@ COLUMNS = [
 ]
 
 
+SHAPES = ("box", "bar", "lollipop", "bracket", "ss")
+SHOW_TRUE = ("1", "1.0", "yes", "y", "true")
+HEX = re.compile(r"#[0-9A-Fa-f]{6}")
+
+
+def is_shown(r):
+    return str(r["show"]).strip().lower() in SHOW_TRUE
+
+
+def parse_row(i, r):
+    """Check the cells layout() draws from one row and add its typed fields.
+
+    A bad cell exits naming the row. Protein rows use only `end`. The colour goes into SVG
+    attributes and darker() reads it as hex, so only #RRGGBB passes.
+    """
+    where = f"{r['protein']} {r['type']} '{r['label']}'"
+
+    def num(c):
+        try:
+            return int(float(r[c]))
+        except (ValueError, OverflowError):
+            sys.exit(f"{where}: {c} '{r[c]}' is not a number")
+
+    if r["type"] == "Protein":
+        return dict(r, row=i, e=num("end"))
+    shape = (r["shape"] or "box").strip().lower()
+    if shape not in SHAPES:
+        sys.exit(f"{where}: shape '{shape}' is not one of {', '.join(SHAPES)}")
+    color = r["color"].strip()
+    if color and not HEX.fullmatch(color):
+        sys.exit(f"{where}: color '{color}' is not #RRGGBB")
+    return dict(
+        r,
+        row=i,
+        s=num("start"),
+        e=num("end"),
+        shape=shape,
+        color=color,
+        label=r["label"].strip(),
+    )
+
+
 def row(**kw):
     r = {c: "" for c in COLUMNS}
     r.update({k: ("" if v is None else v) for k, v in kw.items()})
@@ -78,12 +122,6 @@ def csv_rows(text):
     """
     reader = csv.DictReader(io.StringIO(text.removeprefix("\ufeff"), newline=""))
     return [{c: r.get(c, "") or "" for c in COLUMNS} for r in reader]
-
-
-def read_csv(path):
-    # newline="" keeps CRLF inside quoted fields, as csv expects
-    with open(path, newline="", encoding="utf-8-sig") as fh:
-        return csv_rows(fh.read())
 
 
 def csv_text(rows):
