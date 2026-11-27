@@ -3,9 +3,9 @@ protein-domains-gui -- live preview and click-to-edit for protein-domains, in th
 
 Serves one page on localhost and opens it. Load an InterProScan / UniProt JSON or a
 feature CSV, or fetch a UniProt entry by ID (e.g. P68871 or HBB_HUMAN). Set the same
-options as the CLI, and click any drawn element to change its label or colour. Every
-edit re-renders with the same layout as the CLI, and the page downloads the SVG and
-the edited feature CSV.
+options as the CLI, click any drawn element to change its label or colour, and add
+your own features. Every edit re-renders with the same layout as the CLI, and the
+page downloads the SVG and the edited feature CSV.
 
 Standard library only. Stop with Ctrl+C.
 """

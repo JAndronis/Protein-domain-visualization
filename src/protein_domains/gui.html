@@ -117,6 +117,10 @@ td input:not([type=checkbox]):hover, td select:hover { border-color: var(--line-
 td input[data-c=label] { width: 100%; min-width: 180px; }
 table:not(.multi) .prot { display: none; }
 .grp { color: var(--faint); cursor: help; }
+.del-btn { border: 0; background: none; padding: 0 2px; font-size: 15px; line-height: 1; color: var(--err); cursor: pointer; }
+.add-actions { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.add-error { color: var(--err); font-size: 12px; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .colour-cell { display: flex; align-items: center; gap: 4px; }
 input[type=color] { width: 26px; height: 22px; padding: 0; border: 1px solid var(--line-strong); border-radius: 4px; background: none; cursor: pointer; }
 input[type=color]::-webkit-color-swatch-wrapper { padding: 2px; }
@@ -211,6 +215,16 @@ body.dragging .preview { outline: 2px dashed var(--accent); outline-offset: -8px
       <h2>Protein names<code>--name</code></h2>
       <div class="grid" id="name-fields"></div>
     </div>
+    <div class="group" id="add-group" hidden>
+      <h2>Add a feature<span class="hint">your own domain, region, site, bracket or helix</span></h2>
+      <form id="add-form" novalidate>
+        <div class="grid" id="add-fields"></div>
+        <div class="add-actions">
+          <button class="btn primary" id="add-btn">Add</button>
+          <span class="add-error" id="add-error" hidden></span>
+        </div>
+      </form>
+    </div>
     <details class="features" id="features" hidden>
       <summary>Features<span id="feat-count"></span></summary>
       <div class="table-tools">
@@ -253,7 +267,7 @@ body.dragging .preview { outline: 2px dashed var(--accent); outline-offset: -8px
       <div class="drop-hint">
         <strong>Open an InterProScan or UniProt JSON</strong>
         <span>or a feature CSV written by the CLI. You can also drop the file here, or fetch a UniProt entry by its ID.</span>
-        <span>Then click any domain, bar or site in the figure to change its label or colour.</span>
+        <span>Then click any domain, bar or site in the figure to change its label or colour, or add your own features.</span>
       </div>
     </div>
   </section>
@@ -268,6 +282,10 @@ body.dragging .preview { outline: 2px dashed var(--accent); outline-offset: -8px
     <button class="pop-close" id="insp-close" aria-label="Close">×</button>
   </div>
   <label class="field"><span class="lab" id="insp-label-name">Label</span><input id="insp-label" data-c="label" autocomplete="off"></label>
+  <div class="pair" id="insp-range" hidden>
+    <label class="field"><span class="lab"></span><input id="insp-from" type="number" min="1" step="1"></label>
+    <label class="field"><span class="lab"></span><input id="insp-to" type="number" min="1" step="1"></label>
+  </div>
   <div class="field" id="insp-colour">
     <span class="lab">Colour</span>
     <div class="colour-row">
@@ -279,11 +297,12 @@ body.dragging .preview { outline: 2px dashed var(--accent); outline-offset: -8px
   </div>
   <div class="pop-note" id="insp-note" hidden></div>
   <div class="pop-actions" id="insp-actions">
-    <button class="btn small" id="insp-hide">Hide from figure</button>
+    <span><button class="btn small" id="insp-hide">Hide from figure</button> <button class="btn small" id="insp-delete" hidden>Delete</button></span>
     <span class="muted" style="font-size:11px">Esc to close</span>
   </div>
 </div>
 
+<datalist id="type-options"></datalist>
 <datalist id="fonts">
   <option value="Arial"><option value="Helvetica"><option value="Liberation Sans">
   <option value="DejaVu Sans"><option value="Times New Roman"><option value="Courier New">
@@ -292,7 +311,44 @@ body.dragging .preview { outline: 2px dashed var(--accent); outline-offset: -8px
 <script>
 const $ = s => document.querySelector(s);
 const SVG_NS = 'http://www.w3.org/2000/svg';
-const SHAPES = ['box', 'bar', 'lollipop', 'bracket', 'ss'];
+const SHAPE_INFO = {
+  box: {menu: 'Domain box', type: 'Domain', span: 'range'},
+  bar: {menu: 'Region bar', type: 'Region', span: 'range'},
+  lollipop: {menu: 'Site (lollipop)', type: 'Site', span: 'single'},
+  bracket: {menu: 'Disulfide bracket', type: 'Disulfide bond', span: 'pair'},
+  ss: {menu: 'Secondary structure', type: 'Helix', span: 'range'},
+};
+const SHAPES = Object.keys(SHAPE_INFO);
+const shapeInfo = s => SHAPE_INFO[s] ?? SHAPE_INFO.box;
+const SPANS = {
+  range: {labels: ['From', 'To'], ordered: (a, b) => a <= b,
+          hint: L => `From/To must be whole residues in 1–${L}, From ≤ To`},
+  single: {labels: ['Residue', null], ordered: () => true,
+           hint: L => `Residue must be a whole number in 1–${L}`},
+  pair: {labels: ['Residue 1', 'Residue 2'], ordered: (a, b) => a < b,
+         hint: L => `Residues must be whole numbers in 1–${L}, Residue 1 < Residue 2`},
+};
+
+function validateSpan(values, L, span) {
+  const s = SPANS[span], one = !s.labels[1];
+  const a = Number(values.start), b = one ? a : Number(values.end);
+  const inside = n => Number.isInteger(n) && n >= 1 && n <= L;
+  const bad = [];
+  if (!inside(a)) bad.push('start');
+  if (!one && !inside(b)) bad.push('end');
+  if (!bad.length && !s.ordered(a, b)) bad.push('start', 'end');
+  return bad.length ? {error: s.hint(L), bad} : {start: a, end: b};
+}
+
+function setSpanLabels(from, to, span) {
+  const [a, b] = SPANS[span].labels, wrap = to.closest('.field');
+  from.closest('.field').querySelector('.lab').textContent = a;
+  wrap.hidden = !b;
+  if (b) wrap.querySelector('.lab').textContent = b;
+}
+
+const isCustom = r => r.source === 'Custom' && r.type !== 'Protein';
+const protLen = id => Number(state.rows.find(r => r.type === 'Protein' && r.protein === id)?.end);
 const isShown = r => ['1', '1.0', 'yes', 'y', 'true'].includes(String(r.show).trim().toLowerCase());
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
 
@@ -396,6 +452,81 @@ for (const k of SIZES) {
   $('#size-fields').append(makeField(k[0].toUpperCase() + k.slice(1), `--${k}-size`, input));
 }
 
+// ---- adding custom features -----------------------------------------------------
+for (const [id, label, tag] of [['protein', 'Protein', 'select'], ['shape', 'Shape', 'select'], ['type', 'Type', 'input'],
+                                ['from', 'From', 'input'], ['to', 'To', 'input'], ['label', 'Label', 'input']]) {
+  const el = document.createElement(tag);
+  el.id = 'add-' + id;
+  $('#add-fields').append(makeField(label, '', el));
+}
+for (const [s, info] of Object.entries(SHAPE_INFO)) $('#add-shape').add(new Option(info.menu, s));
+$('#add-type').setAttribute('list', 'type-options');
+for (const id of ['type', 'label']) $('#add-' + id).autocomplete = 'off';
+for (const id of ['from', 'to']) Object.assign($('#add-' + id), {type: 'number', min: 1, step: 1});
+
+function addError(msg = '', bad = []) {
+  $('#add-error').textContent = msg;
+  $('#add-error').hidden = !msg;
+  $('#add-from').classList.toggle('invalid', bad.includes('start'));
+  $('#add-to').classList.toggle('invalid', bad.includes('end'));
+}
+
+function syncAddForm() {
+  const info = shapeInfo($('#add-shape').value), type = $('#add-type').value.trim() || info.type;
+  $('#add-type').placeholder = info.type;
+  $('#add-label').placeholder = type;
+  setSpanLabels($('#add-from'), $('#add-to'), info.span);
+  $('#add-from').max = $('#add-to').max = protLen($('#add-protein').value);
+}
+
+function refreshAddForm() {
+  const prots = state.rows.filter(r => r.type === 'Protein'), psel = $('#add-protein'), keep = psel.value;
+  psel.replaceChildren(...prots.map(r => new Option(r.label || r.protein, r.protein)));
+  if (prots.some(r => r.protein === keep)) psel.value = keep;
+  psel.closest('.field').hidden = prots.length < 2;
+  $('#type-options').replaceChildren(...[...new Set(state.rows.map(r => r.type))].filter(t => t && t !== 'Protein').map(t => new Option(t)));
+  syncAddForm();
+}
+
+$('#add-form').addEventListener('input', e => {
+  e.target.classList.remove('invalid');
+  if (!$('#add-form .invalid')) addError();
+  syncAddForm();
+});
+
+$('#add-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const shape = $('#add-shape').value, info = shapeInfo(shape), protein = $('#add-protein').value;
+  const res = validateSpan({start: $('#add-from').value, end: $('#add-to').value}, protLen(protein), info.span);
+  if (res.error) return addError(res.error, res.bad);
+  addError();
+  const type = $('#add-type').value.trim() || info.type;
+  state.rows.push({protein, source: 'Custom', accession: '', type, start: res.start, end: res.end,
+                   label: $('#add-label').value.trim() || type, shape, show: '1', color: '', group: ''});
+  buildTable();
+  refreshAddForm();
+  updateCounts();
+  closeInspector();
+  select(state.rows.length - 1);
+  changed();
+  for (const id of ['label', 'from', 'to']) $('#add-' + id).value = '';
+  syncAddForm();
+  $('#add-from').focus();
+});
+
+// indices shift, so everything keyed by row index is rebuilt
+function deleteRow(i) {
+  state.rows.splice(i, 1);
+  renderSeq++;
+  closeInspector();
+  buildNames();
+  buildTable();
+  refreshAddForm();
+  updateCounts();
+  select(null);
+  changed();
+}
+
 // ---- row editing ---------------------------------------------------------------
 // A discontinuous domain is one row per fragment sharing a group id; label and
 // colour edits from the figure apply to the whole group.
@@ -442,7 +573,12 @@ function syncInputs() {
       input.classList.remove('invalid');
     } else input.value = r[c] ?? '';
   }
-  for (const tr of $('#feat-body').rows) tr.classList.toggle('off', !isShown(state.rows[+tr.dataset.r]));
+  for (const tr of $('#feat-body').rows) {
+    const r = state.rows[+tr.dataset.r];
+    tr.classList.toggle('off', !isShown(r));
+    tr.querySelector('.res').textContent = `${r.start}–${r.end}`;
+  }
+  syncRange();
 }
 
 function updateCounts() {
@@ -482,10 +618,10 @@ function buildTable() {
       <td class="prot">${esc(r.protein)}</td>
       <td>${esc(r.source)}</td>
       <td>${esc(r.type)}</td>
-      <td class="num" title="${esc(r.accession)}">${esc(r.start)}–${esc(r.end)}${grp}</td>
+      <td class="num" title="${esc(r.accession)}"><span class="res"></span>${grp}</td>
       <td><select data-c="shape">${SHAPES.map(s => `<option>${s}</option>`).join('')}</select></td>
       <td><input data-c="label" autocomplete="off"></td>
-      <td><div class="colour-cell"><input type="color" data-c="color" aria-label="colour"><button class="auto-btn" data-act="auto" title="Back to the automatic colour">auto</button></div></td>`;
+      <td><div class="colour-cell"><input type="color" data-c="color" aria-label="colour"><button class="auto-btn" data-act="auto" title="Back to the automatic colour">auto</button>${isCustom(r) ? '<button class="del-btn" data-act="delete" title="Delete this custom feature">×</button>' : ''}</div></td>`;
     for (const input of tr.querySelectorAll('[data-c]')) input.dataset.r = i;
   });
   $('#features').hidden = !body.rows.length;
@@ -518,6 +654,7 @@ $('#feat-body').addEventListener('click', e => {
   if (!tr) return;
   const i = +tr.dataset.r;
   if (e.target.dataset.act === 'auto') return patch([i], {color: ''});
+  if (e.target.dataset.act === 'delete') return deleteRow(i);
   if (e.target.closest('input, select, button')) return;
   closeInspector();
   select(i);
@@ -630,13 +767,36 @@ function highlight() {
   svg.append(layer);
 }
 
+const inspSub = r => r.type === 'Protein'
+  ? `${r.protein} · ${r.end} aa`
+  : [r.source, r.accession, `residues ${r.start}–${r.end}`, r.shape].filter(Boolean).join(' · ');
+
+function syncRange() {
+  const r = state.rows[state.selected];
+  if ($('#inspector').hidden || !r || !isCustom(r)) return;
+  const [from, to] = [$('#insp-from'), $('#insp-to')];
+  setSpanLabels(from, to, shapeInfo(r.shape).span);
+  for (const [el, k] of [[from, 'start'], [to, 'end']]) if (el !== document.activeElement) el.value = r[k];
+  $('#insp-sub').textContent = inspSub(r);
+}
+
+function editRange() {
+  const i = state.selected, r = state.rows[i], [from, to] = [$('#insp-from'), $('#insp-to')];
+  const res = validateSpan({start: from.value, end: to.value}, protLen(r.protein), shapeInfo(r.shape).span);
+  from.classList.toggle('invalid', !!res.bad?.includes('start'));
+  to.classList.toggle('invalid', !!res.bad?.includes('end'));
+  if (!res.error) patch([i], {start: res.start, end: res.end});
+}
+$('#insp-from').addEventListener('input', editRange);
+$('#insp-to').addEventListener('input', editRange);
+
 function openInspector(i, pageX, pageY) {
   const r = state.rows[i], isProtein = r.type === 'Protein';
   const pop = $('#inspector');
   $('#insp-title').textContent = isProtein ? 'Protein' : r.type || 'Feature';
-  $('#insp-sub').textContent = isProtein
-    ? `${r.protein} · ${r.end} aa`
-    : [r.source, r.accession, `residues ${r.start}–${r.end}`, r.shape].filter(Boolean).join(' · ');
+  $('#insp-sub').textContent = inspSub(r);
+  $('#insp-range').hidden = $('#insp-delete').hidden = !isCustom(r);
+  for (const el of [$('#insp-from'), $('#insp-to')]) el.classList.remove('invalid');
   $('#insp-label-name').textContent = isProtein ? 'Name' : 'Label';
   $('#insp-colour').hidden = $('#insp-actions').hidden = isProtein;
   const group = targets(i), drawn = group.filter(j => isShown(state.rows[j])).length;
@@ -689,6 +849,7 @@ $('#insp-hex').addEventListener('input', e => {
 });
 $('#insp-auto').addEventListener('click', () => editSelected({color: ''}));
 $('#insp-hide').addEventListener('click', () => { editSelected({show: '0'}); closeInspector(); select(null); });
+$('#insp-delete').addEventListener('click', () => deleteRow(state.selected));
 $('#insp-close').addEventListener('click', () => { closeInspector(); select(null); });
 
 $('#preview').addEventListener('click', e => {
@@ -709,8 +870,12 @@ function loaded(rows, stem, source) {
   $('#source').title = source;
   $('#dl-svg').disabled = $('#dl-csv').disabled = false;
   $('#cmd-row').hidden = false;
+  $('#add-group').hidden = false;
+  $('#add-form').reset();
+  addError();
   buildNames();
   buildTable();
+  refreshAddForm();
   updateCounts();
   updateCommand();
   renderNow();

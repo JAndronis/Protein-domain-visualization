@@ -5,7 +5,9 @@ INPUT (auto-detected; several may be combined, proteins are stacked on one scale
   P12345                UniProt accession  -> fetched from rest.uniprot.org
   entry.json            UniProt entry JSON (UniProt page > Download > JSON)
   iprscan.json          InterProScan 5/6 JSON (web server or command line)
-  features.csv          the editable feature table this script writes
+  features.csv          the editable feature table this script writes. It may also hold
+                        only extra rows for a protein given by another input: name the
+                        protein by its accession in the 'protein' column, no Protein row
 
 OUTPUT
   fig.svg               real <rect>/<text>/<path> elements, named groups (layers),
@@ -25,6 +27,7 @@ WORKFLOW
   protein-domains iprscan.json -o fig.svg --name "UrdA'"
   # edit fig_features.csv (switch rows on/off, rename labels, recolour)
   protein-domains fig_features.csv -o fig.svg
+  protein-domains P12345 mine.csv -o fig.svg   # mine.csv: your own rows for P12345
 
 TEXT SIZES
   --font-size sets everything at once. Override single kinds of text with

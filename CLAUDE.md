@@ -28,7 +28,7 @@ uv run protein-domains test_features.csv -o fig.svg --numbers
 # other inputs: UniProt accession (fetched from rest.uniprot.org) or UniProt entry JSON; several can be stacked
 uv run protein-domains P12345 entry.json -o fig.svg
 
-# browser GUI on localhost: open a JSON/CSV or fetch a UniProt ID, set the CLI options, click elements to edit label/colour
+# browser GUI on localhost: open a JSON/CSV or fetch a UniProt ID, set the CLI options, click elements to edit label/colour, add custom features
 uv run protein-domains-gui            # --port N, --no-browser
 
 uvx ruff format src
@@ -63,6 +63,8 @@ Modules are organised by what they know, not by pipeline step:
 - `gui.py` serves `gui.html` with the stdlib `http.server` and has no state of its own. The page holds the
   row table and the `layout()` options, posts both to `/api/render` on every edit, and swaps in the
   returned SVG. Files are loaded through `load_inputs()`, so the GUI accepts exactly what the CLI accepts.
+  Custom features are ordinary rows with `source` "Custom" that the page appends. Deleting a row shifts every
+  later row index, so the page rebuilds the table and the name fields afterwards.
 - `canvas.py` emits SVG fragments. `geometry.py` holds interval packing, label spreading and the
   collision tests. `metrics.py` measures text.
 
