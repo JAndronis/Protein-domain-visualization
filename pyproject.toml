@@ -21,7 +21,7 @@ dev = ["pytest"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["tests"]
+pythonpath = ["tests", "scripts"]
 addopts = "-m 'not e2e and not network'"
 markers = [
     "e2e: drives a real browser; needs the Pyodide CDN and playwright",
