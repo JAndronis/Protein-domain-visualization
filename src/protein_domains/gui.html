@@ -374,11 +374,56 @@ const state = {
   svg: null,           // the rendered <svg> element
 };
 
+// The built static page embeds the package sources; the served page does not. Either way
+// every call is "route + JSON body in, JSON out", so the rest of the page cannot tell which.
+const transport = $('#py-sources') ? pyodideTransport() : httpTransport();
+
+function httpTransport() {
+  return async (path, body) => {
+    const res = await fetch(path, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+    return res.json();
+  };
+}
+
+function pyodideTransport() {
+  const ready = (async () => {
+    $('#status').innerHTML = '<span class="chip">Loading Python…</span>';
+    const py = await loadPyodide();
+    const dir = '/pkg/protein_domains/';
+    py.FS.mkdirTree(dir);
+    for (const [name, src] of Object.entries(JSON.parse($('#py-sources').textContent))) py.FS.writeFile(dir + name, src);
+    py.runPython("import sys; sys.path.insert(0, '/pkg')");
+    const handle = py.pyimport('protein_domains.api').handle_json;
+    document.body.dataset.py = 'ready';
+    $('#status').innerHTML = '';
+    return handle;
+  })();
+  ready.catch(err => {
+    document.body.dataset.py = 'failed';
+    $('#status').innerHTML = `<span class="chip err">${esc(`Could not start Python (${err.message})`)}</span>`;
+  });
+  return async (path, body) => JSON.parse((await ready)(path, JSON.stringify(body)));
+}
+
 async function api(path, body) {
-  const res = await fetch(path, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
-  const out = await res.json();
+  const out = await transport(path, body);
   if (out.error) throw new Error(out.error);
   return out;
+}
+
+// UniProt allows any origin, so the page fetches it in both modes. Python plans the requests
+// and reads the responses; a 303 (entry names) is followed by fetch.
+async function fetchUniprot(accessions) {
+  const {requests} = await api('/api/fetch-plan', {accessions});
+  const responses = await Promise.all(requests.map(async ({acc, url}) => {
+    try {
+      const r = await fetch(url);
+      return {acc, status: r.status, text: await r.text()};
+    } catch (e) {
+      return {acc, status: 0, text: e.message};
+    }
+  }));
+  return api('/api/uniprot', {responses});
 }
 
 const renderOpts = () => ({...state.opts, sizes: {...state.sizes}});
@@ -903,7 +948,7 @@ $('#fetch').addEventListener('submit', async e => {
   busy(true);
   $('#status').innerHTML = `<span class="chip">${esc(`Fetching ${ids} from UniProt…`)}</span>`;
   try {
-    const {rows} = await api('/api/fetch', {accessions});
+    const {rows} = await fetchUniprot(accessions);
     loaded(rows, accessions[0], `UniProt ${ids}`);
     $('#acc').value = '';
   } catch (err) {

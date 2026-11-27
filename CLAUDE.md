@@ -11,7 +11,7 @@ It is a uv project with src layout (`src/protein_domains/`) and no runtime depen
 
 The parent directory's `CLAUDE.md` (European XFEL MID p010400) is unrelated to this project; ignore it here.
 
-No git repo, no test suite. `test_features.csv` and the `iprscan6-*.json` file are sample inputs;
+Tests live in `tests/` (pytest). `test_features.csv` and the `iprscan6-*.json` file are sample inputs;
 `domains.svg` is a sample output.
 
 ## Commands
@@ -31,8 +31,16 @@ uv run protein-domains P12345 entry.json -o fig.svg
 # browser GUI on localhost: open a JSON/CSV or fetch a UniProt ID, set the CLI options, click elements to edit label/colour, add custom features
 uv run protein-domains-gui            # --port N, --no-browser
 
-uvx ruff format src
-uvx ruff check src
+# static page: gui.html + the package sources inlined, run by Pyodide (CDN) in the browser
+uv run python scripts/build_site.py -o site/      # then: python3 -m http.server -d site, or open site/index.html
+
+uv run --group dev pytest                         # unit tests; skips browser and network tests
+uv run --group e2e pytest -m e2e                  # real Chromium: server mode, static mode, byte parity (needs the Pyodide CDN)
+uv run --group e2e pytest -m network              # opens site/index.html from file://
+uv run python scripts/capture_goldens.py          # regenerate tests/golden/ after an intended layout change
+
+uvx ruff format src tests scripts
+uvx ruff check src tests scripts
 ```
 
 `python -m protein_domains` also works. Write scratch renders outside the project directory so the sample
@@ -60,9 +68,21 @@ Modules are organised by what they know, not by pipeline step:
 - `render.py` holds the whole layout in one `layout()` function plus the colour palettes. `layout()` is
   pure: it returns a `Figure` (SVG text, overlaps, omitted boundary numbers, warnings, metrics source).
   `render()` writes that figure to a file and reports on stderr.
-- `gui.py` serves `gui.html` with the stdlib `http.server` and has no state of its own. The page holds the
+- `api.py` is the single registry of what the GUI page can ask Python (`ROUTES`) and owns the one error
+  envelope: `handle(route, body)` never raises, `SystemExit` and other exceptions become `{"error"}`.
+  `handle_json` is the string-in, string-out form both transports call. Inputs are `(name, text)`
+  documents (`inputs.rows_from_text`), never paths. UniProt is split into `uniprot_url` and the pure
+  `read_uniprot_response`; the page does the `fetch()` itself in both modes (`/api/fetch-plan`, then
+  `/api/uniprot`) and urllib stays in the CLI's `fetch_uniprot`.
+- `gui.py` serves `gui.html` with the stdlib `http.server`, forwards POSTs to `api.handle_json`, and has no
+  state of its own. The page holds the
   row table and the `layout()` options, posts both to `/api/render` on every edit, and swaps in the
-  returned SVG. Files are loaded through `load_inputs()`, so the GUI accepts exactly what the CLI accepts.
+  returned SVG. Files are loaded through `rows_from_text()`, so the GUI accepts exactly what the CLI accepts.
+- `scripts/build_site.py` (not in the wheel) writes `site/index.html`: `gui.html` plus every
+  `src/protein_domains/*.py` as a JSON `<script id="py-sources">` and a pinned Pyodide `<script>`. The page
+  picks its transport once from that tag: HTTP to `gui.py`, or `handle_json` inside Pyodide. Pyodide never
+  loads matplotlib, so a static-page SVG equals the CLI run without the `metrics` extra, byte for byte.
+  `gui.html` must keep exactly one inline `<script>`.
   Custom features are ordinary rows with `source` "Custom" that the page appends. Deleting a row shifts every
   later row index, so the page rebuilds the table and the name fields afterwards.
 - `canvas.py` emits SVG fragments. `geometry.py` holds interval packing, label spreading and the

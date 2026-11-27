@@ -1,0 +1,5 @@
+protein,source,accession,type,start,end,label,shape,show,color,group
+P00001,UniProt,P00001,Protein,1,120,DEMO1,,1,,
+P00001,UniProt,,Domain,10,60,Demo domain,box,1,,
+P00001,UniProt,,Modified residue,30,30,pS30,lollipop,1,,
+P00001,UniProt,,Disulfide bond,70,110,C70-C110,bracket,1,,

@@ -23,3 +23,11 @@ ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 *.lnk
+
+# Test fixtures and goldens are tracked; the built static site is not
+!tests/
+!tests/**
+site/
+tests/**/__pycache__/
+!.github/
+!.github/**

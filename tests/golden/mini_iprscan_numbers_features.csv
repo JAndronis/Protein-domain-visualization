@@ -1,0 +1,14 @@
+protein,source,accession,type,start,end,label,shape,show,color,group
+Sequence1,InterProScan,,Protein,1,623,Sequence1,,1,,
+Sequence1,MobiDB-lite,mobidb-lite,Disorder,92,115,disordered,bar,1,,
+Sequence1,PIRSR,PIRSR000171-1,Region,313,455,PIRSR000171-1,box,0,,
+Sequence1,PIRSR,PIRSR000171-1,Active site,453,453,R453,lollipop,1,,
+Sequence1,PIRSR,PIRSR000238-1,Region,106,155,PIRSR000238-1,box,0,,
+Sequence1,PIRSR,PIRSR000238-1,Binding site,118,133,FAD,bar,1,,
+Sequence1,SUPERFAMILY,SSF51905 (IPR036188),Homologous_superfamily,103,176,FAD/NAD(P)-binding domain,box,0,,SUPERFAMILY:SSF51905:1
+Sequence1,SUPERFAMILY,SSF51905 (IPR036188),Homologous_superfamily,207,230,FAD/NAD(P)-binding domain,box,0,,SUPERFAMILY:SSF51905:1
+Sequence1,SUPERFAMILY,SSF51905 (IPR036188),Homologous_superfamily,257,426,FAD/NAD(P)-binding domain,box,0,,SUPERFAMILY:SSF51905:1
+Sequence1,SUPERFAMILY,SSF51905 (IPR036188),Homologous_superfamily,564,621,FAD/NAD(P)-binding domain,box,0,,SUPERFAMILY:SSF51905:1
+Sequence1,SUPERFAMILY,SSF56425 (IPR027477),Homologous_superfamily,411,560,"Succinate dehydrogenase/fumarate reductase flavoprotein, catalytic domain",box,0,,
+Sequence1,Pfam,PF00890 (IPR003953),Domain,118,605,FAD_binding_2,box,1,,
+Sequence1,Pfam,PF04205 (IPR007329),Domain,17,89,FMN_bind,box,1,,

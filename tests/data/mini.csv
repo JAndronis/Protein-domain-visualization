@@ -1,0 +1,7 @@
+protein,source,accession,type,start,end,label,shape,show,color,group
+Sequence1,InterProScan,,Protein,1,300,Demo,,1,,
+Sequence1,Pfam,PF00890 (IPR003953),Domain,20,140,FAD_binding_2,box,1,,
+Sequence1,Pfam,PF04205,Domain,160,260,"FMN, binding",box,1,#C7B8E0,
+Sequence1,PIRSR,PIRSR000171-1,Active site,100,100,R100,lollipop,1,,
+Sequence1,UniProt,,Region,10,60,"disordered
+region",bar,1,,

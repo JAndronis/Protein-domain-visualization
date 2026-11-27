@@ -71,9 +71,16 @@ def site_label(ftype, desc, s, e, residue=""):
     return f"{first}" if first else f"{ftype} {s}"
 
 
+def csv_rows(text):
+    """CSV text -> rows over COLUMNS. A leading BOM is dropped, as utf-8-sig does for files."""
+    reader = csv.DictReader(io.StringIO(text.removeprefix("\ufeff"), newline=""))
+    return [{c: r.get(c, "") or "" for c in COLUMNS} for r in reader]
+
+
 def read_csv(path):
+    # newline="" keeps CRLF inside quoted fields, as csv expects
     with open(path, newline="", encoding="utf-8-sig") as fh:
-        return [{c: r.get(c, "") or "" for c in COLUMNS} for r in csv.DictReader(fh)]
+        return csv_rows(fh.read())
 
 
 def csv_text(rows):
