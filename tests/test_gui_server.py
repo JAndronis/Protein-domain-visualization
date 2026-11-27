@@ -1,5 +1,7 @@
+import http.client
 import json
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -50,6 +52,13 @@ def test_error_is_still_http_200_with_an_envelope(server):
     status, _, out = post(server, "/api/fetch-plan", '{"accessions": []}')
     assert status == 200
     assert json.loads(out) == {"error": "enter a UniProt ID"}
+
+
+def test_post_without_content_length_is_411(server):
+    conn = http.client.HTTPConnection(urllib.parse.urlsplit(server).netloc)
+    conn.putrequest("POST", "/api/render")
+    conn.endheaders()
+    assert conn.getresponse().status == 411
 
 
 @pytest.mark.parametrize("path", ["/api/nope", "/api/fetch"])
