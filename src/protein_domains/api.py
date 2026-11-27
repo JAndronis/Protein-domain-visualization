@@ -19,12 +19,15 @@ Route = Callable[[Body], dict]
 
 
 def load(files):
-    """Uploaded {name, text} documents -> feature rows, through the CLI's own format detection."""
+    """Turn uploaded {name, text} documents into feature rows via the CLI's format detection."""
     return {"rows": [r for f in files for r in rows_from_text(f["name"], f["text"])]}
 
 
 def plan_fetch(accessions):
-    """UniProt IDs -> the URLs the page should fetch. The page owns the network, Python owns the rules."""
+    """Return the URLs the page should fetch for the given UniProt IDs.
+
+    The page owns the network; Python owns the rules.
+    """
     if not accessions:
         sys.exit("enter a UniProt ID")
     for a in accessions:
@@ -34,7 +37,7 @@ def plan_fetch(accessions):
 
 
 def uniprot(responses):
-    """What the page's fetches returned, [{acc, status, text}] -> feature rows."""
+    """Turn the page's fetch results, [{acc, status, text}], into feature rows."""
     return {
         "rows": [
             r
@@ -62,7 +65,7 @@ ROUTES: dict[str, Route] = {
 
 
 def handle(route, body):
-    """Run a route. Never raises: bad input becomes {"error": message}."""
+    """Run a route and never raise: bad input becomes {"error": message}."""
     try:
         fn = ROUTES.get(route)
         if fn is None:

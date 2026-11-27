@@ -4,12 +4,11 @@ from pathlib import Path
 
 
 class Metrics:
-    """Text widths from the real font (via matplotlib) when possible.
+    """Measure text with the real font (via matplotlib) when possible.
 
     Arial/Helvetica fall back to Liberation Sans / Arimo / Nimbus Sans, which are
-    metric-compatible. Without matplotlib a deliberately generous estimate is used.
-    Vertical metrics are Arial's (ascender 0.75 em incl. accents-free caps/ascenders,
-    descender 0.22 em).
+    metric-compatible. Without matplotlib a generous estimate is used. Vertical
+    metrics are Arial's: ascender 0.75 em, descender 0.22 em.
     """
 
     ASC, DESC = 0.75, 0.22
@@ -44,7 +43,7 @@ class Metrics:
             pass
 
     def w(self, s, size):
-        """Advance width in pt. Measured once per string at 1 pt, then scaled."""
+        """Return the advance width in pt, measured once per string and then scaled."""
         s = str(s)
         if s not in self._cache:
             if self.source != "estimate":

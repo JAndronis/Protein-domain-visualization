@@ -24,7 +24,7 @@ OUTPUT
                         to rename the sequence.
 
 WORKFLOW
-  protein-domains iprscan.json -o fig.svg --name "UrdA'"
+  protein-domains iprscan.json -o fig.svg --name "MyProtein"
   # edit fig_features.csv (switch rows on/off, rename labels, recolour)
   protein-domains fig_features.csv -o fig.svg
   protein-domains P12345 mine.csv -o fig.svg   # mine.csv: your own rows for P12345
@@ -35,8 +35,9 @@ TEXT SIZES
   --number-size, --axis-size, --legend-size (all in pt).
 
 LAYOUT
-  All spacing derives from --font-size and the individual sizes, and text is measured with the real font
-  (matplotlib, if installed; otherwise a conservative estimate). Labels that do
+  All spacing derives from --font-size and the individual sizes. Text is
+  measured with the real font (matplotlib, if installed; otherwise a
+  conservative estimate). Labels that do
   not fit inside a domain go below it on a leader line; crowded site labels fan
   out; region bars are packed by label width; axis ticks thin out as text grows.
   After drawing, every text element is checked against all other text, shapes

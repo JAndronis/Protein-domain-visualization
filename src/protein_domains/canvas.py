@@ -26,7 +26,7 @@ class Canvas:
         self._ids = defaultdict(int)
 
     def uid(self, *parts):
-        """An SVG id unique within this figure."""
+        """Return an SVG id unique within this figure."""
         base = re.sub(
             r"[^A-Za-z0-9_-]+", "_", "_".join(str(p) for p in parts if p)
         ).strip("_")
@@ -107,8 +107,10 @@ class Canvas:
         return f'<path d="{d}" fill="none" stroke="{stroke}" stroke-width="{sw}"{da}/>'
 
     def overlaps(self):
-        """Text that touches other text, or a shape/line it does not belong to.
-        Uses the real (possibly rotated) text outline, not its axis-aligned box."""
+        """List text that touches other text, or a shape or line it does not belong to.
+
+        Uses the real (possibly rotated) text outline, not its axis-aligned box.
+        """
         out = []
         T = self.texts
         for i in range(len(T)):

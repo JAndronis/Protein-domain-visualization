@@ -4,7 +4,10 @@ import math
 
 
 def pack(items, key, gap=0.0):
-    """Greedy interval packing (items pre-sorted by start). Returns lane indices."""
+    """Pack intervals greedily into lanes and return each item's lane index.
+
+    Items must be sorted by start.
+    """
     lanes_end, out = [], []
     for it in items:
         s, e = key(it)
@@ -20,7 +23,10 @@ def pack(items, key, gap=0.0):
 
 
 def spread(xs, d, lo=None, hi=None):
-    """Positions >= d apart, minimal displacement, kept inside [lo, hi] if they fit."""
+    """Move positions apart by at least d, displacing them as little as possible.
+
+    The result stays inside [lo, hi] when it fits.
+    """
     clusters = []
     for x in xs:
         clusters.append([x, 1])
@@ -48,7 +54,7 @@ def rect_poly(bb):
 
 
 def poly_hit(P, Q, tol=0.2):
-    """Separating-axis test for two convex polygons (overlap deeper than tol)."""
+    """Return whether two convex polygons overlap by more than tol (separating axes)."""
     for poly in (P, Q):
         for i in range(len(poly)):
             (x1, y1), (x2, y2) = poly[i], poly[(i + 1) % len(poly)]
@@ -74,7 +80,7 @@ def rect_hit(a, b, tol=0.0):
 
 
 def seg_hits_rect(p, q, r, tol=0.3):
-    """Liang-Barsky: does segment pq cross the (slightly shrunk) rectangle r?"""
+    """Return whether segment pq crosses rectangle r shrunk by tol (Liang-Barsky)."""
     x0, y0, x1, y1 = r[0] + tol, r[1] + tol, r[2] - tol, r[3] - tol
     if x0 >= x1 or y0 >= y1:
         return False

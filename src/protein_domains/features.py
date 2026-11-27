@@ -72,7 +72,10 @@ def site_label(ftype, desc, s, e, residue=""):
 
 
 def csv_rows(text):
-    """CSV text -> rows over COLUMNS. A leading BOM is dropped, as utf-8-sig does for files."""
+    """Parse CSV text into rows over COLUMNS.
+
+    A leading BOM is dropped, as utf-8-sig does for files.
+    """
     reader = csv.DictReader(io.StringIO(text.removeprefix("\ufeff"), newline=""))
     return [{c: r.get(c, "") or "" for c in COLUMNS} for r in reader]
 

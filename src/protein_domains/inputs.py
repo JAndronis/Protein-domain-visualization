@@ -10,7 +10,10 @@ from .uniprot import UNIPROT_ID, fetch_uniprot, parse_uniprot
 
 
 def rows_from_text(name, text):
-    """One document -> feature rows. The suffix of `name` picks CSV or JSON, the content picks the JSON kind."""
+    """Turn one document into feature rows.
+
+    The suffix of `name` picks CSV or JSON; the content picks the JSON kind.
+    """
     suffix = Path(name).suffix.lower()
     if suffix == ".csv":
         return csv_rows(text)

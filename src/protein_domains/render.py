@@ -102,8 +102,7 @@ def layout(
     M = Metrics(font)
     C = Canvas(M, font)
     label_angle = max(-90.0, min(-20.0, label_angle))
-    # every size below derives from fs, so changing the font keeps the layout clean
-    # text sizes: each can be set on its own; unset ones follow fs
+    # every size below derives from fs; unset text sizes follow it
     S = dict(
         name=fs + 1,
         domain=fs,

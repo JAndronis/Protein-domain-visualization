@@ -114,7 +114,7 @@ def uniprot_url(acc):
 
 
 def read_uniprot_response(acc, status, text):
-    """What a UniProt GET returned -> the entry dict, or sys.exit with the message to show.
+    """Return the entry dict from a UniProt GET, or sys.exit with the message to show.
 
     status 0 means no response at all and `text` says why. The transport (urllib here, fetch()
     in the browser) is the caller's, so every message lives in this one place.
