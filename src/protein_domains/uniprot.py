@@ -5,6 +5,7 @@ import re
 import sys
 import urllib.error
 import urllib.request
+from http import HTTPStatus
 
 from .features import row, site_label
 
@@ -108,16 +109,43 @@ def parse_uniprot(j):
     return rows
 
 
-def fetch_uniprot(acc):
-    url = f"https://rest.uniprot.org/uniprotkb/{acc}.json"
+def uniprot_url(acc):
+    return f"https://rest.uniprot.org/uniprotkb/{acc}.json"
+
+
+def read_uniprot_response(acc, status, text):
+    """What a UniProt GET returned -> the entry dict, or sys.exit with the message to show.
+
+    status 0 means no response at all and `text` says why. The transport (urllib here, fetch()
+    in the browser) is the caller's, so every message lives in this one place.
+    """
+    if status == 200:
+        return json.loads(text)
+    if status == 0:
+        sys.exit(f"{acc}: could not reach UniProt ({text})")
     try:
-        with urllib.request.urlopen(url, timeout=30) as r:
-            return json.loads(r.read().decode())
-    except urllib.error.HTTPError as e:
+        messages = json.loads(text)["messages"]
+        if not (
+            isinstance(messages, list) and all(isinstance(m, str) for m in messages)
+        ):
+            raise TypeError
+        msg = "; ".join(messages)
+    except (ValueError, KeyError, TypeError):
+        msg = ""
+    if not msg:
         try:
-            msg = "; ".join(json.loads(e.read())["messages"])
-        except (ValueError, KeyError, TypeError):
-            msg = str(e.reason)
-        sys.exit(f"{acc}: {msg} (HTTP {e.code})")
+            msg = HTTPStatus(status).phrase
+        except ValueError:
+            msg = "HTTP error"
+    sys.exit(f"{acc}: {msg} (HTTP {status})")
+
+
+def fetch_uniprot(acc):
+    try:
+        with urllib.request.urlopen(uniprot_url(acc), timeout=30) as r:
+            status, text = 200, r.read().decode()  # urlopen raises on non-2xx
+    except urllib.error.HTTPError as e:
+        status, text = e.code, e.read().decode(errors="replace")
     except OSError as e:
-        sys.exit(f"{acc}: could not reach UniProt ({getattr(e, 'reason', e)})")
+        status, text = 0, str(getattr(e, "reason", e))
+    return read_uniprot_response(acc, status, text)
