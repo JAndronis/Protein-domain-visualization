@@ -46,23 +46,30 @@ COLUMNS = [
 
 
 SHAPES = ("box", "bar", "lollipop", "bracket", "ss")
-TRUE = ("1", "1.0", "yes", "y", "true")
+SHOW_TRUE = ("1", "1.0", "yes", "y", "true")
 HEX = re.compile(r"#[0-9A-Fa-f]{6}")
 
 
-def parse_row(i, r):
-    """Check one row for layout() and add its typed fields; bad cells exit naming the row.
+def is_shown(r):
+    return str(r["show"]).strip().lower() in SHOW_TRUE
 
-    The colour goes into SVG attributes and darker() reads it as hex, so only #RRGGBB passes.
+
+def parse_row(i, r):
+    """Check the cells layout() draws from one row and add its typed fields.
+
+    A bad cell exits naming the row. Protein rows use only `end`. The colour goes into SVG
+    attributes and darker() reads it as hex, so only #RRGGBB passes.
     """
     where = f"{r['protein']} {r['type']} '{r['label']}'"
 
     def num(c):
         try:
             return int(float(r[c]))
-        except ValueError:
+        except (ValueError, OverflowError):
             sys.exit(f"{where}: {c} '{r[c]}' is not a number")
 
+    if r["type"] == "Protein":
+        return dict(r, row=i, e=num("end"))
     shape = (r["shape"] or "box").strip().lower()
     if shape not in SHAPES:
         sys.exit(f"{where}: shape '{shape}' is not one of {', '.join(SHAPES)}")
@@ -77,7 +84,6 @@ def parse_row(i, r):
         shape=shape,
         color=color,
         label=r["label"].strip(),
-        shown=str(r["show"]).strip().lower() in TRUE,
     )
 
 

@@ -29,8 +29,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path not in ROUTES:
             return self.send_error(404)
-        length = self.headers["Content-Length"]
-        if length is None:
+        length = self.headers["Content-Length"] or ""
+        if not (length.isascii() and length.isdigit()):
             return self.send_error(411)
         body = self.rfile.read(int(length)).decode()
         self._send("application/json", handle_json(self.path, body).encode())

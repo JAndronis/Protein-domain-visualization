@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .canvas import Canvas, darker
-from .features import parse_row
+from .features import is_shown, parse_row
 from .geometry import pack, rect_hit, spread
 from .metrics import Metrics
 
@@ -137,19 +137,18 @@ def layout(
     STEM, ELBOW = 1.2 * fs, 1.0 * fs
     G = 0.4 * fs  # generic small gap
 
-    rows = [parse_row(i, r) for i, r in enumerate(rows)]
     prots = OrderedDict()
-    for r in rows:
+    for i, r in enumerate(rows):
         if r["type"] == "Protein":
             prots[r["protein"]] = dict(
-                name=r["label"] or r["protein"], L=r["e"], feats=[], row=r["row"]
+                name=r["label"] or r["protein"], L=parse_row(i, r)["e"], feats=[], row=i
             )
-    for f in rows:
-        if f["type"] == "Protein" or not f["shown"]:
+    for i, r in enumerate(rows):
+        if r["type"] == "Protein" or not is_shown(r):
             continue
-        if f["protein"] not in prots:
-            sys.exit(f"feature for unknown protein '{f['protein']}' (no 'Protein' row)")
-        prots[f["protein"]]["feats"].append(f)
+        if r["protein"] not in prots:
+            sys.exit(f"feature for unknown protein '{r['protein']}' (no 'Protein' row)")
+        prots[r["protein"]]["feats"].append(parse_row(i, r))
 
     Lmax = max(p["L"] for p in prots.values())
     sx = width / Lmax

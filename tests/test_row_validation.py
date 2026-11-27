@@ -64,3 +64,27 @@ def test_font_name_cannot_inject_an_attribute(estimate):
     svg = layout(rows, font='Arial" onload="alert(1)').svg
     assert "onload" not in attribute_names(svg)
     assert 'font-family="Arial&quot; onload=&quot;alert(1)"' in svg
+
+
+def test_hidden_row_is_not_checked(estimate):
+    shown = render(rows_with(show="0"))
+    hidden_junk = render(rows_with(show="0", start="", shape="weird", color="red"))
+    assert hidden_junk == shown
+
+
+def test_protein_row_needs_only_a_numeric_end(estimate):
+    rows = rows_with()
+    rows[0].update(shape="Protein", start="", color="whatever", label="  Demo  ")
+    assert "error" not in render(rows)
+    rows[0]["end"] = "n/a"
+    assert (
+        render(rows)["error"]
+        == "Sequence1 Protein '  Demo  ': end 'n/a' is not a number"
+    )
+
+
+def test_infinite_position_names_the_row(estimate):
+    out = render(rows_with(start="inf"))
+    assert out["error"] == (
+        "Sequence1 Region 'disordered\nregion': start 'inf' is not a number"
+    )

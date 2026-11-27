@@ -54,9 +54,12 @@ def test_error_is_still_http_200_with_an_envelope(server):
     assert json.loads(out) == {"error": "enter a UniProt ID"}
 
 
-def test_post_without_content_length_is_411(server):
-    conn = http.client.HTTPConnection(urllib.parse.urlsplit(server).netloc)
+@pytest.mark.parametrize("length", [None, "abc", "-1"])
+def test_post_without_a_usable_content_length_is_411(server, length):
+    conn = http.client.HTTPConnection(urllib.parse.urlsplit(server).netloc, timeout=5)
     conn.putrequest("POST", "/api/render")
+    if length is not None:
+        conn.putheader("Content-Length", length)
     conn.endheaders()
     assert conn.getresponse().status == 411
 
