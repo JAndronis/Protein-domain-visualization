@@ -4,29 +4,38 @@ import json
 import sys
 from pathlib import Path
 
-from .features import read_csv
+from .features import csv_rows
 from .interproscan import parse_iprscan
 from .uniprot import UNIPROT_ID, fetch_uniprot, parse_uniprot
+
+
+def rows_from_text(name, text):
+    """One document -> feature rows. The suffix of `name` picks CSV or JSON, the content picks the JSON kind."""
+    suffix = Path(name).suffix.lower()
+    if suffix == ".csv":
+        return csv_rows(text)
+    if suffix != ".json":
+        sys.exit(f"{name}: expected a .json or .csv file")
+    try:
+        j = json.loads(text)
+    except ValueError as e:
+        sys.exit(f"{name}: not valid JSON ({e})")
+    if isinstance(j, dict):
+        results = j.get("results")
+        if isinstance(results, list) and results and "matches" in results[0]:
+            return parse_iprscan(j)
+        if "primaryAccession" in j:
+            return parse_uniprot(j)
+    sys.exit(f"{name}: not a recognised UniProt or InterProScan JSON")
 
 
 def load_inputs(inputs, names):
     rows = []
     for item in inputs:
         p = Path(item)
-        if p.suffix.lower() == ".csv":
-            rows += read_csv(p)
-        elif p.suffix.lower() == ".json":
-            j = json.loads(p.read_text(encoding="utf-8"))
-            if (
-                isinstance(j.get("results"), list)
-                and j["results"]
-                and "matches" in j["results"][0]
-            ):
-                rows += parse_iprscan(j)
-            elif "primaryAccession" in j:
-                rows += parse_uniprot(j)
-            else:
-                sys.exit(f"{p}: not a recognised UniProt or InterProScan JSON")
+        if p.suffix.lower() in (".csv", ".json"):
+            with open(p, newline="", encoding="utf-8-sig") as fh:
+                rows += rows_from_text(str(p), fh.read())
         elif UNIPROT_ID.fullmatch(item):
             print(f"fetching {item} from UniProt ...", file=sys.stderr)
             rows += parse_uniprot(fetch_uniprot(item))
