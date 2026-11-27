@@ -1,6 +1,6 @@
 [project]
 name = "protein-domains"
-version = "0.1.0"
+version = "0.2.0"
 description = "Editable, DOG-style protein domain diagrams as SVG from UniProt, InterProScan or a feature table"
 authors = [
     { name = "Iason Andronis", email = "iason.andronis@fysik.su.se" }
